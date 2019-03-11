@@ -37,7 +37,7 @@ class ARMObject(with_metaclass(ARMMetaObject)):
 
     def _set_data(self, obj):
         self._data = obj
-        self._data = object2data(self._data)
+        self._data = data2object(self._data)
         if 'id' in obj:
             _object_cache[self.__class__][obj['id']] = self
 

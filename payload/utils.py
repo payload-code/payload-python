@@ -55,8 +55,10 @@ def data2object(item):
             if isinstance(val, dict)\
             and val.get('object'):
                 Object = get_object_cls(val)
-                item[key] = Object(**val)
+                if Object:
+                    item[key] = Object(**val)
         return item
+    return recurse(item)
 
 def object2data(item):
     def recurse(item):

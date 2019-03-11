@@ -24,6 +24,9 @@ class Payment(Transaction):
 class Refund(Transaction):
     __spec__ = { 'polymorphic': { 'type': 'refund' } }
 
+class Ledger(ARMObject):
+    __spec__ = { 'object': 'transaction_ledger' }
+
 class PaymentMethod(ARMObject):
     __spec__ = { 'object': 'payment_method' }
 
@@ -32,9 +35,6 @@ class Card(PaymentMethod):
 
 class BankAccount(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'bank_account' } }
-
-class Event(ARMObject):
-    __spec__ = { 'object': 'event' }
 
 class BillingSchedule(ARMObject):
     __spec__ = { 'object': 'billing_schedule' }
@@ -46,7 +46,7 @@ class Invoice(ARMObject):
     __spec__ = { 'object': 'invoice' }
 
 class LineItem(ARMObject):
-    __spec__ = { 'object': 'line_items' }
+    __spec__ = { 'object': 'line_item' }
 
 class ChargeItem(LineItem):
     __spec__ = { 'polymorphic': { 'type': 'charge' } }
