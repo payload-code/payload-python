@@ -28,7 +28,7 @@ keys are accessible from within the Payload dashboard.
 ```python
 import payload as pl
 pl.api_key = 'secret_key_3bW9JMZtPVDOfFNzwRdfE'
-``
+```
 
 ### Creating an Object
 
