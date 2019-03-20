@@ -97,5 +97,5 @@ payments = pl.Payments.filter_by(
 
 ## Documentation
 
-To get further information on Payload's Payload library and API capabilities,
+To get further information on Payload's Python library and API capabilities,
 visit the unabridged [Payload Documentation](https://docs.payload.co/?python).
