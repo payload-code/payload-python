@@ -5,6 +5,7 @@ A Python library for integrating [Payload](https://payload.co).
 ## Installation
 
 ## Install using pip
+
 ```bash
 pip install payload-api
 ```
