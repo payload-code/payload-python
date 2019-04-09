@@ -2,9 +2,9 @@ import os
 import sys
 try:
     from io import open
-    from setuptools import setup
+    from setuptools import setup, find_packages
 except ImportError:
-    from distutils.core import setup
+    from distutils.core import setup, find_packages
 
 pkg_name = 'payload'
 
@@ -19,14 +19,14 @@ with open(os.path.join(directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='payload-api',
-    version=__version__,
+    version='.'.join(map(str,__version__)),
     description='Payload Python Library',
     author='Payload',
     author_email='help@payload.co',
     url='https://github.com/payload-code/payload-python',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    packages=[pkg_name],
+    packages=find_packages(),
     install_requires=['requests', 'six'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

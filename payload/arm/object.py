@@ -83,4 +83,4 @@ class ARMObject(with_metaclass(ARMMetaObject)):
             .delete(objects, **values)
 
 from .request import ARMRequest
-from ..utils import object2data
+from ..utils import object2data, data2object
