@@ -21,7 +21,7 @@ class UnknownResponse(PayloadError):
 class BadRequest(PayloadError):
     http_code = 400
 
-class InvalidArguments(BadRequest):
+class InvalidAttributes(BadRequest):
     pass
 
 class Unauthorized(PayloadError):

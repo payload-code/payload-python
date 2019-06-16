@@ -30,7 +30,7 @@ class ARMRequest(object):
 
         if self._attrs:
             params.update( nested_qstring_keys(
-                {'attrs': map(str,self._attrs)}) )
+                {'fields': map(str,self._attrs)}) )
 
         if self._group_by:
             params.update( nested_qstring_keys(

@@ -57,7 +57,7 @@ payment = pl.Payment.create(
 
 ### Accessing Object Attributes
 
-Object attributes are accessible through both dot notation.
+Object attributes are accessible through dot notation.
 
 ```python
 customer.name
@@ -78,7 +78,7 @@ Objects can be selected using any of their attributes.
 
 ```python
 # Select a customer by email
-var customers = pl.Customer.filter_by(
+customers = pl.Customer.filter_by(
     email='matt.perez@example.com'
 )
 ```
