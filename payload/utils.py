@@ -43,11 +43,17 @@ def nested_qstring_keys(base):
         return base
     return recurse(base)
 
-def data2object(item):
+def data2object(item, field_map=set()):
     def recurse(item):
         if isinstance( item, (list,tuple) ):
             _iter = enumerate(item)
         else:
+            for f in field_map:
+                if 'type' not in item: continue
+                if item['type'] not in item:
+                    item[item['type']] = {}
+                if f in item:
+                    item[item['type']][f] = item.pop(f)
             _iter = list(item.items())
         for key, val in _iter:
             if isinstance(val, (list, dict)):
@@ -65,6 +71,8 @@ def object2data(item):
         if isinstance( item, (list,tuple) ):
             _iter = enumerate(item)
         else:
+            if isinstance( item, ARMObject ):
+                item = item.data()
             _iter = list(item.items())
         for key, val in _iter:
             if isinstance(val, ARMObject):

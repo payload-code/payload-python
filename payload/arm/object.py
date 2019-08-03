@@ -19,7 +19,7 @@ class ARMMetaObject(MetaAttr):
 
 class ARMObject(with_metaclass(ARMMetaObject)):
     __spec__ = {}
-    field_map = None
+    field_map = set()
 
     def __new__(cls, **obj):
         if 'id' in obj:
@@ -33,11 +33,13 @@ class ARMObject(with_metaclass(ARMMetaObject)):
         self._set_data(dict(self.__spec__.get('polymorphic') or {}, **obj))
 
     def __getattr__(self, attr):
+        if attr in self.field_map:
+            return self._data.get(self._data.get('type'),{}).get(attr)
         return self._data.get(attr)
 
     def _set_data(self, obj):
         self._data = obj
-        self._data = data2object(self._data)
+        self._data = data2object(self._data, self.field_map)
         if 'id' in obj:
             _object_cache[self.__class__][obj['id']] = self
 

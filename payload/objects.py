@@ -24,6 +24,9 @@ class Payment(Transaction):
 class Refund(Transaction):
     __spec__ = { 'polymorphic': { 'type': 'refund' } }
 
+class Deposit(Transaction):
+    __spec__ = { 'polymorphic': { 'type': 'deposit' } }
+
 class Ledger(ARMObject):
     __spec__ = { 'object': 'transaction_ledger' }
 
@@ -32,6 +35,7 @@ class PaymentMethod(ARMObject):
 
 class Card(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'card' } }
+    field_map = set(['card_number'])
 
 class BankAccount(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'bank_account' } }
