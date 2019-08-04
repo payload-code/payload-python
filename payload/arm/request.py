@@ -7,7 +7,8 @@ else:
     from urlparse import urljoin
 from .object import ARMObject
 from .attr import Attr
-from ..utils import nested_qstring_keys, map_attrs, object2data, map_object
+from ..utils import (nested_qstring_keys, map_attrs,
+                     object2data, map_object, convert_fieldmap)
 
 class ARMRequest(object):
 
@@ -29,12 +30,13 @@ class ARMRequest(object):
                 if k not in params: params[k] = v
 
         if self._attrs:
-            params.update( nested_qstring_keys(
-                {'fields': map(str,self._attrs)}) )
+            params['fields'] = list(map(str,self._attrs))
 
         if self._group_by:
-            params.update( nested_qstring_keys(
-                {'group_by': map(str,self._group_by)}) )
+            params['group_by'] = list(map(str,self._group_by))
+
+        convert_fieldmap(params, self.Object.field_map)
+        params = nested_qstring_keys(params)
 
         response = getattr(requests, method)(
             urljoin(payload.api_url, endpoint.strip('/')),
@@ -120,7 +122,6 @@ class ARMRequest(object):
         else:
             raise TypeError('Bulk create requires ARMObject object types')
 
-
     def update(self, objects=None, **values):
         if objects:
             if not isinstance( objects, list ):
@@ -147,3 +148,7 @@ class ARMRequest(object):
 
     def all(self):
         return self._request('get')
+
+    def first(self):
+        resp = self._request('get', params=dict(limit=1))
+        if resp: return resp[0]

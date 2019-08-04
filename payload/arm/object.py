@@ -62,7 +62,7 @@ class ARMObject(with_metaclass(ARMMetaObject)):
     @classmethod
     def filter_by(cls, *filters, **kw_filters):
         return ARMRequest(cls)\
-            .filter_by(*filters, **dict(cls.__spec__.get('polymorphic') or {},**kw_filters))
+            .filter_by(*filters, **dict(cls.__spec__.get('polymorphic') or {}, **kw_filters))
 
     @classmethod
     def create(cls, objects=None, **values):

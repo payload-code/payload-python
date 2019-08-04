@@ -48,12 +48,7 @@ def data2object(item, field_map=set()):
         if isinstance( item, (list,tuple) ):
             _iter = enumerate(item)
         else:
-            for f in field_map:
-                if 'type' not in item: continue
-                if item['type'] not in item:
-                    item[item['type']] = {}
-                if f in item:
-                    item[item['type']][f] = item.pop(f)
+            convert_fieldmap(item, field_map)
             _iter = list(item.items())
         for key, val in _iter:
             if isinstance(val, (list, dict)):
@@ -65,6 +60,14 @@ def data2object(item, field_map=set()):
                     item[key] = Object(**val)
         return item
     return recurse(item)
+
+def convert_fieldmap(obj, field_map):
+    for f in field_map:
+        if 'type' not in obj: continue
+        if obj['type'] not in obj:
+            obj[obj['type']] = {}
+        if f in obj:
+            obj[obj['type']][f] = obj.pop(f)
 
 def object2data(item):
     def recurse(item):
