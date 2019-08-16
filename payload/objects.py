@@ -18,6 +18,10 @@ class User(ARMObject):
 class Transaction(ARMObject):
     __spec__ = { 'object': 'transaction' }
 
+    def void(self):
+        self.update(status='voided')
+        return self
+
 class Payment(Transaction):
     __spec__ = { 'polymorphic': { 'type': 'payment' } }
 
