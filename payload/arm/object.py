@@ -1,5 +1,6 @@
 from .attr import MetaAttr
 from six import with_metaclass
+import json
 
 _object_cache = {}
 
