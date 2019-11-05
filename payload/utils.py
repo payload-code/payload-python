@@ -4,7 +4,7 @@ from .arm.attr import Attr
 def get_object_cls(item):
     cls = None
     for Object in _object_cache:
-        if Object.__spec__['object'] != item['object']:
+        if Object.__spec__['object'] != item.get('object'):
             continue
         if 'polymorphic' in Object.__spec__:
             found = True

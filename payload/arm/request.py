@@ -36,7 +36,8 @@ class ARMRequest(object):
             params['group_by'] = list(map(str,self._group_by))
 
         convert_fieldmap(params, self.Object.field_map)
-        convert_fieldmap(json, self.Object.field_map)
+        if json:
+            convert_fieldmap(json, self.Object.field_map)
         params = nested_qstring_keys(params)
 
         response = getattr(requests, method)(
