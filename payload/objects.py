@@ -64,3 +64,6 @@ class PaymentItem(LineItem):
 
 class Webhook(ARMObject):
     __spec__ = { 'object': 'webhook' }
+
+class PaymentLink(ARMObject):
+    __spec__ = { 'object': 'payment_link' }
