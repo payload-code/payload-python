@@ -103,3 +103,15 @@ def map_attrs( cls, item ):
             if nested_key not in obj:
                 obj[nested_key] = {}
             obj[nested_key][key_map[nested_key]] = obj.pop(key)
+
+def find_key(key, dictionary):
+    for k, v in dictionary.iteritems():
+        if k == key:
+            yield v
+        elif isinstance(v, dict):
+            for result in find_key(key, v):
+                yield result
+        elif isinstance(v, list):
+            for d in v:
+                for result in find_key(key, d):
+                    yield result

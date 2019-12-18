@@ -1,14 +1,19 @@
+import os
+import re
+import sys
+
 import payload
 import requests
-import sys, os
+
+from ..utils import (convert_fieldmap, find_key, map_attrs, map_object,
+                     nested_qstring_keys, object2data)
+from .attr import Attr
+from .object import ARMObject
+
 if sys.version_info >= (3,0):
     from urllib.parse import urljoin
 else:
     from urlparse import urljoin
-from .object import ARMObject
-from .attr import Attr
-from ..utils import (nested_qstring_keys, map_attrs,
-                     object2data, map_object, convert_fieldmap)
 
 class ARMRequest(object):
 
@@ -23,6 +28,22 @@ class ARMRequest(object):
         headers  = headers or {}
         params   = nested_qstring_keys(params or {})
         auth     = (payload.api_key, '')
+        files    = {}
+
+        if find_key('file', json): 
+            file_keys = []
+            flat_data = nested_qstring_keys(json)
+            for k in flat_data:
+                if re.search(r'\bfile\b', k):
+                    key_dict = {k: flat_data.get(k)}
+                    file_keys.append(key_dict)
+            
+            if len(file_keys):
+                for index, item in enumerate(file_keys):
+                    for k in item: 
+                        flat_data.pop(k)
+                        files[k] = item[k]
+
         if id: endpoint = os.path.join(endpoint, id)
 
         if self._filters:
@@ -40,13 +61,22 @@ class ARMRequest(object):
             convert_fieldmap(json, self.Object.field_map)
         params = nested_qstring_keys(params)
 
-        response = getattr(requests, method)(
-            urljoin(payload.api_url, endpoint.strip('/')),
-            headers=headers,
-            params=params,
-            auth=auth,
-            json=json)
-
+        if files:   
+            response = getattr(requests, method)(
+                urljoin(payload.api_url, endpoint.strip('/')),
+                params=params,
+                auth=auth,
+                data=json,
+                files=files
+                )
+        else:
+            response = getattr(requests, method)(
+                urljoin(payload.api_url, endpoint.strip('/')),
+                headers=headers,
+                params=params,
+                auth=auth,
+                json=json
+                )
         try:
             data = response.json()
 
