@@ -87,11 +87,11 @@ Use the `pl.attr` attribute helper
 interface to write powerful queries with a little extra syntax sugar.
 
 ```python
-payments = pl.Payments.filter_by(
+payments = pl.Payment.filter_by(
     pl.attr.amount > 100,
     pl.attr.amount < 200,
     pl.attr.description.contains("Test"),
-    pl.attr.created_at > datetime(2019,2,1))
+    pl.attr.created_at > datetime(2019,2,1)
 ).all()
 ```
 
