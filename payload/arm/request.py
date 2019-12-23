@@ -31,8 +31,8 @@ class ARMRequest(object):
         files    = {}
 
         flat_data = nested_qstring_keys(json)
-        for k in flat_data:                             
-            if hasattr(flat_data[k], 'read'): files[k] = flat_data.get(k)
+        for k in list(flat_data):                             
+            if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
 
         if id: endpoint = os.path.join(endpoint, id)
 
@@ -56,7 +56,7 @@ class ARMRequest(object):
                 urljoin(payload.api_url, endpoint.strip('/')),
                 params=params,
                 auth=auth,
-                data=json,
+                data=flat_data,
                 files=files
                 )
         else:
