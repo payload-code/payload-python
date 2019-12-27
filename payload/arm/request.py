@@ -31,9 +31,10 @@ class ARMRequest(object):
         auth     = (payload.api_key, '')
         files    = {}
 
-        flat_data = nested_qstring_keys(copy.deepcopy(json))
-        for k in list(flat_data):
-            if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
+        if json:
+            flat_data = nested_qstring_keys(copy.deepcopy(json))
+            for k in list(flat_data):
+                if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
 
         if id: endpoint = os.path.join(endpoint, id)
 
