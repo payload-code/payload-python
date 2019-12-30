@@ -16,7 +16,7 @@ class User(ARMObject):
     __spec__ = { 'object': 'user' }
 
 class Transaction(ARMObject):
-    __spec__ = { 'object': 'transaction' }
+    __spec__ = { 'endpoint': '/transactions', 'object': 'transaction' }
 
     def void(self):
         self.update(status='voided')

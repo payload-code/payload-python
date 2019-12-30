@@ -30,7 +30,13 @@ class ARMRequest(object):
         auth     = (payload.api_key, '')
         files    = {}
 
-        flat_data = nested_qstring_keys(json)
+        print('///////////////BEFORE NESTED QSTRING//////////////////')
+        print(json)
+        print('/////////////////////////////////')
+
+
+        json_copy = json
+        flat_data = nested_qstring_keys(json_copy)
         for k in list(flat_data):                             
             if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
 
@@ -51,7 +57,15 @@ class ARMRequest(object):
             convert_fieldmap(json, self.Object.field_map)
         params = nested_qstring_keys(params)
 
+
+
+        print('////////////////AFTER/////////////////')
+        print(json)
+        print('/////////////////////////////////')
+
+
         if files:   
+            print('FILESSSSSSSSSSS')
             response = getattr(requests, method)(
                 urljoin(payload.api_url, endpoint.strip('/')),
                 params=params,
@@ -60,6 +74,8 @@ class ARMRequest(object):
                 files=files
                 )
         else:
+            print('WELP')
+
             response = getattr(requests, method)(
                 urljoin(payload.api_url, endpoint.strip('/')),
                 headers=headers,
