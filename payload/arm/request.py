@@ -32,7 +32,7 @@ class ARMRequest(object):
         files    = {}
 
         if json:
-            flat_data = nested_qstring_keys(copy.deepcopy(json))
+            flat_data = nested_qstring_keys(copy.copy(json))
             for k in list(flat_data):
                 if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
 
