@@ -4,6 +4,7 @@ import sys
 
 import payload
 import requests
+import copy
 
 from ..utils import (convert_fieldmap, map_attrs, map_object,
                      nested_qstring_keys, object2data)
@@ -30,15 +31,10 @@ class ARMRequest(object):
         auth     = (payload.api_key, '')
         files    = {}
 
-        print('///////////////BEFORE NESTED QSTRING//////////////////')
-        print(json)
-        print('/////////////////////////////////')
-
-
-        json_copy = json
-        flat_data = nested_qstring_keys(json_copy)
-        for k in list(flat_data):                             
-            if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
+        if json:
+            flat_data = nested_qstring_keys(copy.deepcopy(json))
+            for k in list(flat_data):
+                if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
 
         if id: endpoint = os.path.join(endpoint, id)
 
@@ -57,15 +53,7 @@ class ARMRequest(object):
             convert_fieldmap(json, self.Object.field_map)
         params = nested_qstring_keys(params)
 
-
-
-        print('////////////////AFTER/////////////////')
-        print(json)
-        print('/////////////////////////////////')
-
-
-        if files:   
-            print('FILESSSSSSSSSSS')
+        if files:
             response = getattr(requests, method)(
                 urljoin(payload.api_url, endpoint.strip('/')),
                 params=params,
@@ -74,8 +62,6 @@ class ARMRequest(object):
                 files=files
                 )
         else:
-            print('WELP')
-
             response = getattr(requests, method)(
                 urljoin(payload.api_url, endpoint.strip('/')),
                 headers=headers,
@@ -105,6 +91,8 @@ class ARMRequest(object):
                 or Error.http_code != response.status_code:
                     continue
                 raise Error(data.get('description'), data)
+            if response.status_code == 500:
+                raise payload.InternalServerError(data.get('description'), data)
             raise payload.BadRequest(data.get('description'), data)
 
     def get(self, id, **params):
