@@ -8,7 +8,8 @@ from payload.exceptions import NotFound
 
 from .fixtures import Fixtures
 
-pl.api_key = "your_secret_key_3bzs0Ilz3X8TsM76hFOxT"
+pl.api_key = "test_secret_key_3bzs0IlzojNTsM76hFOxT"
+pl.api_url = "http://api.payload-dev.co:8000"
 
 
 class TestAccount(Fixtures):
@@ -63,7 +64,24 @@ class TestAccount(Fixtures):
 
     def test_update_cust(self, customer_account):
         customer_account.update(email="test2@example.com")
+
         assert customer_account.email == "test2@example.com"
+
+    def test_update_mult_acc(self):
+        customer_account_1 = pl.Customer.create(
+            name="Brandy", email="test1@example.com"
+        )
+        customer_account_2 = pl.Customer.create(name="Sandy", email="test2@example.com")
+
+        pl.update(
+            [
+                [customer_account_1, {"email": "brandy@example.com"}],
+                [customer_account_2, {"email": "sandy@example.com"}],
+            ]
+        )
+
+        assert customer_account_1.email == "brandy@example.com"
+        assert customer_account_2.email == "sandy@example.com"
 
     def test_get_cust(self, customer_account):
         assert pl.Customer.get(customer_account.id)
