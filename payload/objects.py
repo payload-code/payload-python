@@ -43,6 +43,7 @@ class Card(PaymentMethod):
 
 class BankAccount(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'bank_account' } }
+    field_map = set(['account_number', 'routing_number', 'account_type'])
 
 class BillingSchedule(ARMObject):
     __spec__ = { 'object': 'billing_schedule' }
@@ -57,10 +58,10 @@ class LineItem(ARMObject):
     __spec__ = { 'object': 'line_item' }
 
 class ChargeItem(LineItem):
-    __spec__ = { 'polymorphic': { 'type': 'charge' } }
+    __spec__ = { 'polymorphic': { 'entry_type': 'charge' } }
 
 class PaymentItem(LineItem):
-    __spec__ = { 'polymorphic': { 'type': 'payment' } }
+    __spec__ = { 'polymorphic': { 'entry_type': 'payment' } }
 
 class Webhook(ARMObject):
     __spec__ = { 'object': 'webhook' }
