@@ -39,7 +39,7 @@ class PaymentMethod(ARMObject):
 
 class Card(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'card' } }
-    field_map = set(['card_number', 'expiry'])
+    field_map = set(['card_number', 'expiry', 'card_code'])
 
 class BankAccount(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'bank_account' } }
