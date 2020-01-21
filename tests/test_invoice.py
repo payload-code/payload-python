@@ -6,8 +6,6 @@ import payload as pl
 
 from .fixtures import Fixtures
 
-pl.api_key = "your_secret_key_3bzs0Ilz3X8TsM76hFOxT"
-
 
 @pytest.fixture
 def invoice(processing_account, customer_account):
@@ -23,11 +21,11 @@ def invoice(processing_account, customer_account):
 
 
 class TestInvoice(Fixtures):
-    def test_create_invoice(self, invoice):
+    def test_create_invoice(self, api_key, invoice):
         assert invoice.due_date == "Wed, 01 May 2019 00:00:00 GMT"
         assert invoice.status == "unpaid"
 
-    def test_pay_invoice(self, invoice, customer_account):
+    def test_pay_invoice(self, api_key, invoice, customer_account):
         pass
         assert invoice.due_date == "Wed, 01 May 2019 00:00:00 GMT"
         assert invoice.status == "unpaid"

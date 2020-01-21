@@ -1,10 +1,14 @@
+import os
 import payload as pl
 import pytest
 
-pl.api_key = "test_secret_key_3bzs0Ilz3X8TsM76hFOxT"
-
 
 class Fixtures(object):
+    @pytest.fixture
+    def api_key(self):
+        pl.api_key = os.environ["TEST_SECRET_KEY"]
+        pl.api_url = "http://api.payload-dev.co:8000"
+
     @pytest.fixture
     def customer_account(self):
         customer_account = pl.Customer.create(name="Test", email="test@example.com")
@@ -26,9 +30,9 @@ class Fixtures(object):
                         "legal_name": "Test",
                         "type": "INDIVIDUAL_SOLE_PROPRIETORSHIP",
                         "ein": "23 423 4234",
-                        "street_address": "57 Clifton Pl",
-                        "unit_number": "Apt 2",
-                        "city": "Brooklyn",
+                        "street_address": "123 Example Street",
+                        "unit_number": "Suite 1",
+                        "city": "New York",
                         "state_province": "NY",
                         "state_incorporated": "NY",
                         "postal_code": "11238",
@@ -46,11 +50,11 @@ class Fixtures(object):
                                 "birth_date": "06/20/1985",
                                 "title": "CEO",
                                 "ownership": "100",
-                                "street_address": "4455 Carver Woods Drive, Suite 200",
-                                "unit_number": "2408",
-                                "city": "Cincinnati",
-                                "state_province": "OH",
-                                "postal_code": "45242",
+                                "street_address": "123 Main Street",
+                                "unit_number": "#1A",
+                                "city": "New York",
+                                "state_province": "NY",
+                                "postal_code": "10001",
                                 "phone_number": "(111) 222-3333",
                                 "type": "owner",
                             }

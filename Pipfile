@@ -5,15 +5,16 @@ verify_ssl = true
 
 [dev-packages]
 black = "*"
+pathlib = "*"
+pytest = "*"
 
 [packages]
 requests = "*"
 six = "*"
-pathlib = "*"
-pytest = "*"
 
 [requires]
 python_version = "3.7"
+
 
 [pipenv]
 allow_prereleases = true

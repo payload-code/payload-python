@@ -4,8 +4,6 @@ import payload as pl
 
 from .fixtures import Fixtures
 
-pl.api_key = "your_secret_key_3bzs0Ilz3X8TsM76hFOxT"
-
 
 @pytest.fixture()
 def billing_schedule(processing_account, customer_account):
@@ -23,12 +21,14 @@ def billing_schedule(processing_account, customer_account):
 
 
 class TestBilling(Fixtures):
-    def test_create_billing_schedule(self, billing_schedule, processing_account):
+    def test_create_billing_schedule(
+        self, api_key, billing_schedule, processing_account
+    ):
         assert billing_schedule.processing_id == processing_account.id
         assert billing_schedule.charges[0].amount == 39.99
 
     def test_update_billing_schedule_frequency(
-        self, billing_schedule, processing_account
+        self, api_key, billing_schedule, processing_account
     ):
         assert billing_schedule.processing_id == processing_account.id
         assert billing_schedule.charges[0].amount == 39.99
