@@ -7,7 +7,6 @@ class Fixtures(object):
     @pytest.fixture
     def api_key(self):
         pl.api_key = os.environ["TEST_SECRET_KEY"]
-        pl.api_url = "http://api.payload-dev.co:8000"
 
     @pytest.fixture
     def customer_account(self):
