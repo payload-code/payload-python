@@ -95,6 +95,16 @@ payments = pl.Payment.filter_by(
 ).all()
 ```
 
+### Testing the Payload Python Library
+
+Tests are contained within the tests/ directory. To run a test file, once within the 
+pipenv shell, enter the command in terminal 
+
+```bash
+ pytest tests/{__FILENAME__}.py 
+ ```
+
+
 ## Documentation
 
 To get further information on Payload's Python library and API capabilities,

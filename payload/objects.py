@@ -16,7 +16,7 @@ class User(ARMObject):
     __spec__ = { 'object': 'user' }
 
 class Transaction(ARMObject):
-    __spec__ = { 'object': 'transaction' }
+    __spec__ = { 'endpoint': '/transactions', 'object': 'transaction' }
 
     def void(self):
         self.update(status='voided')
@@ -39,10 +39,11 @@ class PaymentMethod(ARMObject):
 
 class Card(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'card' } }
-    field_map = set(['card_number', 'expiry'])
+    field_map = set(['card_number', 'expiry', 'card_code'])
 
 class BankAccount(PaymentMethod):
     __spec__ = { 'polymorphic': { 'type': 'bank_account' } }
+    field_map = set(['account_number', 'routing_number', 'account_type'])
 
 class BillingSchedule(ARMObject):
     __spec__ = { 'object': 'billing_schedule' }
@@ -57,10 +58,10 @@ class LineItem(ARMObject):
     __spec__ = { 'object': 'line_item' }
 
 class ChargeItem(LineItem):
-    __spec__ = { 'polymorphic': { 'type': 'charge' } }
+    __spec__ = { 'polymorphic': { 'entry_type': 'charge' } }
 
 class PaymentItem(LineItem):
-    __spec__ = { 'polymorphic': { 'type': 'payment' } }
+    __spec__ = { 'polymorphic': { 'entry_type': 'payment' } }
 
 class Webhook(ARMObject):
     __spec__ = { 'object': 'webhook' }
