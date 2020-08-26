@@ -3,11 +3,11 @@ from .arm.object import ARMObject
 class Account(ARMObject):
     __spec__ = { 'object': 'account' }
 
-class Customer(Account):
-    __spec__ = { 'polymorphic': { 'type': 'customer' } }
+class Customer(ARMObject):
+    __spec__ = { 'object': 'customer' }
 
-class ProcessingAccount(Account):
-    __spec__ = { 'polymorphic': { 'type':'processing'} }
+class ProcessingAccount(ARMObject):
+    __spec__ = { 'object': 'processing_account' }
 
 class Org(ARMObject):
     __spec__ = { 'endpoint': '/accounts/orgs', 'object': 'org' }
