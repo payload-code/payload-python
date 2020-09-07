@@ -86,7 +86,8 @@ class ARMRequest(object):
             else:
                 return map_object(data)
         else:
-            for Error in payload.PayloadError.__subclasses__():
+            errors = [ err for _ in payload.PayloadError.__subclasses__() for err in _.__subclasses__()+[_] ]
+            for Error in errors:
                 if Error.__name__ != data.get('error_type') \
                 or Error.http_code != response.status_code:
                     continue

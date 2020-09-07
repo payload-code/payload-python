@@ -28,6 +28,9 @@ class Payment(Transaction):
 class Refund(Transaction):
     __spec__ = { 'polymorphic': { 'type': 'refund' } }
 
+class Credit(Transaction):
+    __spec__ = { 'polymorphic': { 'type': 'credit' } }
+
 class Deposit(Transaction):
     __spec__ = { 'polymorphic': { 'type': 'deposit' } }
 

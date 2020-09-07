@@ -3,13 +3,15 @@ import json
 class PayloadError(Exception):
     http_code = None
     details = None
-    def __init__( self, description=None, details=None ):
+    response = None
+    def __init__( self, description=None, response=None ):
         if not description:
             description = self.__class__.__name__
-        if details:
-            self.details = details
+        if response:
+            self.response = response
+            self.details = self.response.get('details')
             description += '\n\n'+json.dumps(
-                details,
+                response,
                 sort_keys=True,
                 indent=4
             )
@@ -20,6 +22,12 @@ class UnknownResponse(PayloadError):
 
 class BadRequest(PayloadError):
     http_code = 400
+
+class TransactionDeclined(BadRequest):
+    def __init__(self, *args, **kwargs):
+        from .utils import map_object
+        super().__init__(*args, **kwargs)
+        self.transaction = self.details = map_object(self.response['details'])
 
 class InvalidAttributes(BadRequest):
     pass
