@@ -71,3 +71,7 @@ class Webhook(ARMObject):
 
 class PaymentLink(ARMObject):
     __spec__ = { 'object': 'payment_link' }
+
+class PaymentActivation(ARMObject):
+    __spec__ = { 'object': 'payment_activation' }
+

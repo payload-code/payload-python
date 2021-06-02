@@ -11,9 +11,10 @@ pytest = "*"
 [packages]
 requests = "*"
 six = "*"
+urllib3 = ">=1.26.5"
 
 [requires]
-python_version = "3.7"
+python_version = "3"
 
 
 [pipenv]
