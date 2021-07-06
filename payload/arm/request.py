@@ -36,7 +36,7 @@ class ARMRequest(object):
             for k in list(flat_data):
                 if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
 
-        if id: endpoint = os.path.join(endpoint, id)
+        if id: endpoint = f"{endpoint}/{id}"
 
         if self._filters:
             for k, v in dict( (f.attr, f.opval) for f in self._filters ).items():
