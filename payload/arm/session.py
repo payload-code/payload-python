@@ -1,5 +1,6 @@
 from .request import ARMRequest
 from .object import ARMObject, ARMObjectWrapper
+from . import Attr
 import types
 import inspect
 import payload
@@ -11,6 +12,8 @@ def get_object(objects, name):
         return getattr(objects, name)
 
 class Session(object):
+    attr = Attr
+
     def __init__(self, api_key=None, api_url=None):
         self.api_key = api_key or payload.api_key
         self.api_url = api_url or payload.api_url
