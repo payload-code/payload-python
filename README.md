@@ -30,6 +30,16 @@ import payload as pl
 pl.api_key = 'secret_key_3bW9JMZtPVDOfFNzwRdfE'
 ```
 
+----------------------------
+
+Session based:
+
+```python
+import payload
+pl = payload.Session('secret_key_3bW9JMZtPVDOfFNzwRdfE')
+```
+
+
 ### Creating an Object
 
 Interfacing with the Payload API is done primarily through Payload Objects. Below is an example of
