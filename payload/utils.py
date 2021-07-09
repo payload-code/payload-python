@@ -43,7 +43,7 @@ def nested_qstring_keys(base):
         return base
     return recurse(base)
 
-def data2object(item, field_map=set()):
+def data2object(item, field_map=set(), session=None):
     def recurse(item):
         if isinstance( item, (list,tuple) ):
             _iter = enumerate(item)
@@ -57,6 +57,8 @@ def data2object(item, field_map=set()):
             and val.get('object'):
                 Object = get_object_cls(val)
                 if Object:
+                    if session:
+                        val['_session'] = session
                     item[key] = Object(**val)
         return item
     return recurse(item)

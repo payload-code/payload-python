@@ -91,17 +91,17 @@ payments = pl.Payment.filter_by(
     pl.attr.amount > 100,
     pl.attr.amount < 200,
     pl.attr.description.contains("Test"),
-    pl.attr.created_at > datetime(2019,2,1)
+    pl.attr.created_at > datetime(2021,2,1)
 ).all()
 ```
 
 ### Testing the Payload Python Library
 
-Tests are contained within the tests/ directory. To run a test file, once within the 
-pipenv shell, enter the command in terminal 
+Tests are contained within the tests/ directory. To run a test file, once within the
+pipenv shell, enter the command in terminal
 
 ```bash
- pytest tests/{__FILENAME__}.py 
+TEST_SECRET_KEY=test_api_key pytest tests/{__FILENAME__}.py
  ```
 
 

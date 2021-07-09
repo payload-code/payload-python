@@ -9,14 +9,13 @@ from .fixtures import Fixtures
 class TestTransaction(Fixtures):
     def test_transaction_ledger_empty(self, api_key, card_payment):
         transaction = pl.Transaction.select("*", "ledger").get(card_payment.id)
-
         assert transaction.ledger == []
 
     def test_unified_payout_batching(self, api_key, processing_account):
         pl.Refund.create(
             amount=10,
             processing_id=processing_account.id,
-            payment_method=pl.Card(card_number="4242 4242 4242 4242"),
+            payment_method=pl.Card(card_number="4242 4242 4242 4242", expiry="12/25"),
         )
 
         transactions = (

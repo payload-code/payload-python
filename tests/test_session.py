@@ -1,28 +1,36 @@
-import random
-import string
-
 import pytest
+import os
+import string
+import random
 
-import dateutil.parser
-
-import payload as pl
-from payload.exceptions import NotFound
+import payload
+from payload.exceptions import BadRequest, NotFound
 
 from .fixtures import Fixtures
 
+import dateutil.parser
 
-class TestAccount(Fixtures):
-    def test_create_customer_account(self, api_key):
+@pytest.fixture
+def pl():
+    payload.api_key = None
+    pl = payload.Session(os.environ["TEST_SECRET_KEY"])
+    if "TEST_API_URL" in os.environ:
+        pl.api_url = os.environ["TEST_API_URL"]
+
+    return pl
+
+class TestSession(Fixtures):
+    def test_create_customer_account(self, pl):
         customer_account = pl.Customer.create(name="Test", email="test@example.com")
-
         assert customer_account.id
 
-    def test_delete(self, api_key, customer_account):
+    def test_delete(self, pl):
+        customer_account = pl.Customer.create(name="Test", email="test@example.com")
         with pytest.raises(NotFound):
             customer_account.delete()
             customer_get = pl.Customer.get(customer_account.id)
 
-    def test_create_mult_accounts(self, api_key):
+    def test_create_mult_accounts(self, pl):
         letters = string.ascii_lowercase
         rand_email1 = "".join(random.choice(letters) for i in range(5)) + "@example.com"
         rand_email2 = "".join(random.choice(letters) for i in range(5)) + "@example.com"
@@ -40,11 +48,11 @@ class TestAccount(Fixtures):
         assert get_account_1
         assert get_account_2
 
-    def test_get_processing_account(self, api_key, processing_account):
-        assert pl.ProcessingAccount.get(processing_account.id)
-        assert processing_account.status == "pending"
+    #def test_get_processing_account(self, api_key, processing_account):
+    #    assert pl.ProcessingAccount.get(processing_account.id)
+    #    assert processing_account.status == "pending"
 
-    def test_paging_and_ordering_results(self, api_key):
+    def test_paging_and_ordering_results(self, pl):
         accounts = pl.create(
             [
                 pl.Customer(email="account1@example.com", name="Randy Robson"),
@@ -61,12 +69,13 @@ class TestAccount(Fixtures):
         assert dateutil.parser.parse(customers[0].created_at) < dateutil.parser.parse(customers[1].created_at)
         assert dateutil.parser.parse(customers[1].created_at) < dateutil.parser.parse(customers[2].created_at)
 
-    def test_update_cust(self, api_key, customer_account):
+    def test_update_cust(self, pl):
+        customer_account = pl.Customer.create(name="Test", email="test@example.com")
         customer_account.update(email="test2@example.com")
 
         assert customer_account.email == "test2@example.com"
 
-    def test_update_mult_acc(self, api_key):
+    def test_update_mult_acc(self, pl):
         customer_account_1 = pl.Customer.create(
             name="Brandy", email="test1@example.com"
         )
@@ -82,9 +91,11 @@ class TestAccount(Fixtures):
         assert customer_account_1.email == "brandy@example.com"
         assert customer_account_2.email == "sandy@example.com"
 
-    def test_get_cust(self, api_key, customer_account):
+    def test_get_cust(self, pl):
+        customer_account = pl.Customer.create(name="Test", email="test@example.com")
         assert pl.Customer.get(customer_account.id)
 
-    def test_select_cust_attr(self, api_key, customer_account):
+    def test_select_cust_attr(self, pl):
+        customer_account = pl.Customer.create(name="Test", email="test@example.com")
         select_customer_id = pl.Customer.select("id").get(customer_account.id).get("id")
         assert select_customer_id == customer_account.id

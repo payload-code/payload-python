@@ -7,6 +7,7 @@ verify_ssl = true
 black = "*"
 pathlib = "*"
 pytest = "*"
+python-dateutil = "*"
 
 [packages]
 requests = "*"
@@ -15,7 +16,6 @@ urllib3 = ">=1.26.5"
 
 [requires]
 python_version = "3"
-
 
 [pipenv]
 allow_prereleases = true

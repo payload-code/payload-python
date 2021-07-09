@@ -16,13 +16,14 @@ class TestPaymentMethod(Fixtures):
     def test_create_payment_bank(self, api_key, bank_payment):
         assert bank_payment.status == "processed"
 
-    def test_payment_filters(self, api_key):
+    def test_payment_filters(self, api_key, processing_account):
         letters = string.ascii_lowercase
         rand_description = "".join(random.choice(letters) for i in range(10))
 
         card_payment = pl.Payment.create(
             amount=100.0,
             description=rand_description,
+            processing_id=processing_account.id,
             payment_method=pl.Card(
                 card_number="4242 4242 4242 4242", expiry="05/22", card_code="123"
             ),
@@ -72,7 +73,7 @@ class TestPaymentMethod(Fixtures):
         refund = pl.Refund.create(
             amount=10,
             processing_id=processing_account.id,
-            payment_method=pl.Card(card_number="4242 4242 4242 4242"),
+            payment_method=pl.Card(card_number="4242 4242 4242 4242", expiry="12/25"),
         )
 
         assert refund.type == "refund"
@@ -97,14 +98,6 @@ class TestPaymentMethod(Fixtures):
         assert refund.amount == 10
         assert refund.status_code == "approved"
 
-    def test_convenience_fee(self, api_key):
-        payment = pl.Payment.select("*", "conv_fee").create(
-            amount=100, payment_method=pl.Card(card_number="4242 4242 4242 4242")
-        )
-
-        assert payment.fee
-        assert payment.conv_fee != None
-
     def test_invalid_payment_method_type_invalid_attributes(self, api_key):
         with pytest.raises(BadRequest):
-            pl.Transaction.create(type="invalid", card_number="4242 4242 4242 4242")
+            pl.Transaction.create(type="invalid", card_number="4242 4242 4242 4242", expiry="12/25")

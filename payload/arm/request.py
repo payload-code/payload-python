@@ -18,17 +18,19 @@ else:
 
 class ARMRequest(object):
 
-    def __init__(self, Object=None):
+    def __init__(self, Object=None, session=None):
         self.Object = Object
+        self.session = session
         self._filters  = []
         self._attrs    = []
         self._group_by = []
 
     def _request(self, method, id=None, headers=None, params=None, json=None):
+        session  = self.session or payload
         endpoint = self.Object.__spec__['endpoint']
         headers  = headers or {}
         params   = nested_qstring_keys(params or {})
-        auth     = (payload.api_key, '')
+        auth     = (session.api_key, '')
         files    = {}
 
         if json:
@@ -55,7 +57,7 @@ class ARMRequest(object):
 
         if files:
             response = getattr(requests, method)(
-                urljoin(payload.api_url, endpoint.strip('/')),
+                urljoin(session.api_url, endpoint.strip('/')),
                 params=params,
                 auth=auth,
                 data=flat_data,
@@ -63,7 +65,7 @@ class ARMRequest(object):
                 )
         else:
             response = getattr(requests, method)(
-                urljoin(payload.api_url, endpoint.strip('/')),
+                urljoin(session.api_url, endpoint.strip('/')),
                 headers=headers,
                 params=params,
                 auth=auth,
@@ -82,8 +84,11 @@ class ARMRequest(object):
 
         if response.status_code == 200:
             if data.get('object') == 'list':
-                return list(map( map_object, data['values'] ))
+                for row in data['values']:
+                    row['_session'] = self.session
+                return list(map(map_object, data['values']))
             else:
+                data['_session'] = self.session
                 return map_object(data)
         else:
             errors = [ err for _ in payload.PayloadError.__subclasses__() for err in _.__subclasses__()+[_] ]
@@ -126,6 +131,7 @@ class ARMRequest(object):
             obj.update(self.Object.__spec__.get('polymorphic',{}))
 
         obj = object2data(obj)
+        print(obj)
         return self._request('post', json=obj)
 
     def delete(self, objects=None):

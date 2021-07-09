@@ -12,7 +12,7 @@ def invoice(processing_account, customer_account):
     invoice = pl.Invoice.create(
         type="bill",
         processing_id=processing_account.id,
-        due_date="2019-05-01",
+        due_date=datetime.datetime.today().strftime('%Y-%m-%d'),
         customer_id=customer_account.id,
         items=[pl.ChargeItem(amount=29.99)],
     )
@@ -22,16 +22,15 @@ def invoice(processing_account, customer_account):
 
 class TestInvoice(Fixtures):
     def test_create_invoice(self, api_key, invoice):
-        assert invoice.due_date == "Wed, 01 May 2019 00:00:00 GMT"
+        assert invoice.due_date == datetime.datetime.today().strftime('%Y-%m-%d')
         assert invoice.status == "unpaid"
 
     def test_pay_invoice(self, api_key, invoice, customer_account):
-        pass
-        assert invoice.due_date == "Wed, 01 May 2019 00:00:00 GMT"
+        assert invoice.due_date == datetime.datetime.today().strftime('%Y-%m-%d')
         assert invoice.status == "unpaid"
 
         card_payment = pl.Card.create(
-            account_id=customer_account.id, card_number="4242 4242 4242 4242"
+            account_id=customer_account.id, card_number="4242 4242 4242 4242", expiry='12/25'
         )
 
         if invoice.status != "paid":
