@@ -131,7 +131,6 @@ class ARMRequest(object):
             obj.update(self.Object.__spec__.get('polymorphic',{}))
 
         obj = object2data(obj)
-        print(obj)
         return self._request('post', json=obj)
 
     def delete(self, objects=None):
