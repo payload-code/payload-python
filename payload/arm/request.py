@@ -139,20 +139,20 @@ class ARMRequest(object):
                 raise ValueError('List must not be empty')
             for o in objects:
                 if not isinstance( o, ARMObject ):
-                    raise TypeError('Bulk create requires ARMObject object types')
+                    raise TypeError('Bulk delete requires ARMObject object types')
                 if not self.Object:
                     self.Object = o.__class__
                 elif not isinstance( o, self.Object ):
-                    raise TypeError('Bulk create requires all objects to be of the same type')
+                    raise TypeError('Bulk delete requires all objects to be of the same type')
             delete_query = '|'.join([ obj.id for obj in objects ])
             return self._request('delete', params={'id': delete_query, 'mode': 'query'})
         elif isinstance( objects, ARMObject ):
             self.Object = objects.__class__
-            return cls._request('delete', id=objects.id)
+            return self._request('delete', id=objects.id)
         elif objects is None and self.Object and self._filters:
             return self._request('delete', params={'mode':'query'})
         else:
-            raise TypeError('Bulk create requires ARMObject object types')
+            raise TypeError('Bulk delete requires ARMObject object types')
 
     def update(self, objects=None, **values):
         if objects:
