@@ -22,11 +22,6 @@ from payload.objects import *
 from payload.arm.attr import Attr
 
 
-class MockObject:
-    def __init__(self, **kwargs):
-        self.kwargs = kwargs
-
-
 arm_object_classes = []
 
 for name, obj in inspect.getmembers(objects_module):
@@ -343,17 +338,32 @@ def test_armrequest_update(mock_request, test_case, arm_request):
         else:
             mock_request.assert_called_once_with('put', json=test_case['expected_json'])
 
+@pytest.mark.parametrize('attrs, expected_filters', [
+    (dict(attr1='value1', attr2='value2'), [['attr1', 'value1', 'value1'], ['attr2', 'value2', 'value2']]),
+    (dict(attr=dict(nested='value')), [['attr[nested]', 'value', 'value']]),
+    ([Attr.attr1=='value1'],[['attr1', 'value1', 'value1']]),
+    ([Attr.attr1!='value1'],[['attr1', '!value1', 'value1']]),
+    ([Attr.attr1>'value1'],[['attr1', '>value1', 'value1']]),
+    ([Attr.attr1>='value1'],[['attr1', '>=value1', 'value1']]),
+    ([Attr.attr1<'value1'],[['attr1', '<value1', 'value1']]),
+    ([Attr.attr1<='value1'],[['attr1', '<=value1', 'value1']]),
+    ([Attr.attr1.contains('value1')],[['attr1', '?*value1', 'value1']]),
+    ([Attr.attr1.func() == 'value1'],[['func(attr1)', 'value1', 'value1']]),
+    ([Attr.attr1.nested.func() == 'value1'],[['func(attr1[nested])', 'value1', 'value1']]),
+    ([Attr.attr1.nested.func() != 'value1'],[['func(attr1[nested])', '!value1', 'value1']]),
+])
+def test_armrequest_filter_by(arm_request, attrs, expected_filters):
+    if isinstance(attrs, dict):
+        request = arm_request.filter_by(**attrs)
+    else:
+        request = arm_request.filter_by(*attrs)
 
-def test_armrequest_filter_by(arm_request):
-    request = arm_request.filter_by(attr="test_attribute", value="test_value")
+    assert len(arm_request._filters) == len(expected_filters)
 
-    assert arm_request._filters[0].attr == "attr"
-    assert arm_request._filters[0].opval == "test_attribute"
-    assert arm_request._filters[0].val == "test_attribute"
-
-    assert arm_request._filters[1].attr == "value"
-    assert arm_request._filters[1].opval == "test_value"
-    assert arm_request._filters[1].val == "test_value"
+    for i, (attr, opval, val) in enumerate(expected_filters):
+        assert arm_request._filters[i].attr == attr
+        assert arm_request._filters[i].opval == opval
+        assert arm_request._filters[i].val == val
 
 
 def test_armrequest_all(arm_request):
