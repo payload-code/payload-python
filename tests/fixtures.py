@@ -1,6 +1,7 @@
 import os
 import payload as pl
 import pytest
+import datetime
 
 
 class Fixtures(object):
@@ -32,7 +33,7 @@ class Fixtures(object):
                     "state_incorporated": "NY",
                     "postal_code": "11238",
                     "phone_number": "(111) 222-3333",
-                    "website": "www.payload.co",
+                    "website": "http://www.payload.co",
                     "start_date": "05/01/2015",
                     "contact_name": "Test Person",
                     "contact_email": "test.person@example.com",
@@ -76,8 +77,7 @@ class Fixtures(object):
         return card_payment
 
     @pytest.fixture
-    def bank_payment(self, processing_account):
-
+    def bank_payment(self):
         bank_payment = pl.Payment.create(
             type="payment",
             amount=100.0,
@@ -89,3 +89,51 @@ class Fixtures(object):
         )
 
         return bank_payment
+
+    @pytest.fixture
+    def bank_payment_method(self):
+        bank_payment = pl.Payment.create(
+            type="payment",
+            amount=100.0,
+            payment_method=pl.BankAccount(
+                account_number="1234567890",
+                routing_number="036001808",
+                account_type="checking",
+            ),
+        )
+
+        return bank_payment
+
+    @pytest.fixture
+    def payment_link_one_time(self, processing_account):
+        payment_link = pl.PaymentLink.create(
+            type="one_time",
+            description="Payment Request",
+            amount=10.00,
+            processing_id=processing_account.id,
+        )
+
+        return payment_link
+
+    @pytest.fixture
+    def payment_link_reusable(self, processing_account):
+        payment_link = pl.PaymentLink.create(
+            type="reusable",
+            description="Payment Request",
+            amount=10.00,
+            processing_id=processing_account.id,
+        )
+
+        return payment_link
+
+    @pytest.fixture
+    def invoice(self, processing_account, customer_account):
+        invoice = pl.Invoice.create(
+            type="bill",
+            processing_id=processing_account.id,
+            due_date=datetime.datetime.today().strftime('%Y-%m-%d'),
+            customer_id=customer_account.id,
+            items=[pl.ChargeItem(amount=29.99)],
+        )
+
+        return invoice

@@ -25,7 +25,7 @@ class TestPaymentMethod(Fixtures):
             description=rand_description,
             processing_id=processing_account.id,
             payment_method=pl.Card(
-                card_number="4242 4242 4242 4242", expiry="05/22", card_code="123"
+                card_number="4242 4242 4242 4242", expiry="05/35", card_code="123"
             ),
         )
 
@@ -73,7 +73,7 @@ class TestPaymentMethod(Fixtures):
         refund = pl.Refund.create(
             amount=10,
             processing_id=processing_account.id,
-            payment_method=pl.Card(card_number="4242 4242 4242 4242", expiry="12/25"),
+            payment_method=pl.Card(card_number="4242 4242 4242 4242", expiry="12/25", card_code='123'),
         )
 
         assert refund.type == "refund"

@@ -3,6 +3,7 @@ import pytest
 import payload as pl
 
 from .fixtures import Fixtures
+from payload.exceptions import NotFound
 
 
 @pytest.fixture()
@@ -36,3 +37,8 @@ class TestBilling(Fixtures):
         billing_schedule.update(recurring_frequency="quarterly")
 
         assert billing_schedule.recurring_frequency == "quarterly"
+
+    def test_delete_billing_schedule(self, billing_schedule):
+        with pytest.raises(NotFound):
+            billing_schedule.delete()
+            billing_schedule_get = pl.BillingSchedule.get(billing_schedule.id)

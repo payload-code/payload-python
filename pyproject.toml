@@ -1,0 +1,32 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "Ian Halpern", email = "ian@payload.co"},
+]
+dependencies = ["requests", "six", "urllib3>=1.26.5"]
+requires-python = ">=3.7"
+license = {text = ""}
+
+[build-system]
+requires = ["pdm-pep517>=1.0.0"]
+build-backend = "pdm.pep517.api"
+
+
+[tool.pdm]
+allow_prereleases = true
+
+[[tool.pdm.source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "black",
+    "pathlib",
+    "pytest",
+    "python-dateutil",
+    "mock"
+]

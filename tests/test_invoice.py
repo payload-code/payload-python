@@ -5,6 +5,8 @@ import pytest
 import payload as pl
 
 from .fixtures import Fixtures
+from payload.exceptions import NotFound
+
 
 
 @pytest.fixture
@@ -21,16 +23,16 @@ def invoice(processing_account, customer_account):
 
 
 class TestInvoice(Fixtures):
-    def test_create_invoice(self, api_key, invoice):
+    def test_create_invoice(self, invoice):
         assert invoice.due_date == datetime.datetime.today().strftime('%Y-%m-%d')
         assert invoice.status == "unpaid"
 
-    def test_pay_invoice(self, api_key, invoice, customer_account):
+    def test_pay_invoice(self, invoice, customer_account):
         assert invoice.due_date == datetime.datetime.today().strftime('%Y-%m-%d')
         assert invoice.status == "unpaid"
 
         card_payment = pl.Card.create(
-            account_id=customer_account.id, card_number="4242 4242 4242 4242", expiry='12/25'
+            account_id=customer_account.id, card_number="4242 4242 4242 4242", expiry='12/35', card_code='123'
         )
 
         if invoice.status != "paid":
@@ -43,3 +45,8 @@ class TestInvoice(Fixtures):
 
         get_invoice = pl.Invoice.get(invoice.id)
         assert get_invoice.status == "paid"
+
+    def test_delete_invoice(self, invoice):
+        with pytest.raises(NotFound):
+            invoice.delete()
+            invoice_get = pl.Invoice.get(invoice.id)
