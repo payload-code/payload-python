@@ -1,13 +1,13 @@
 [project]
-name = ""
-version = ""
-description = ""
+name = "payload-api"
+version = "0.4.6"
+description = "Payload Python Library"
 authors = [
     {name = "Ian Halpern", email = "ian@payload.co"},
 ]
 dependencies = ["requests", "six", "urllib3>=1.26.5"]
 requires-python = ">=3.7"
-license = {text = ""}
+license = {text = "MIT"}
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]
