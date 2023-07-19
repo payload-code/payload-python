@@ -1,5 +1,11 @@
 from .arm.object import ARMObject
 
+class AccessToken(ARMObject):
+    __spec__ = {'object': 'access_token'}
+
+class ClientKey(AccessToken):
+    __spec__ = { 'polymorphic': { 'type': 'client' } }
+
 class Account(ARMObject):
     __spec__ = { 'object': 'account' }
 
