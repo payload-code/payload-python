@@ -12,8 +12,8 @@ from .fixtures import Fixtures
 
 
 class TestAccessToken(Fixtures):
-    def test_create_client_key(self, api_key):
-        client_key = pl.ClientKey.create()
-        assert client_key.status == "active"
-        assert client_key.type == "client"
-        assert client_key.environ == 'test'
+    def test_create_client_token(self, api_key):
+        client_token = pl.ClientKey.create()
+        assert client_token.status == "active"
+        assert client_token.type == "client"
+        assert client_token.environ == 'test'
