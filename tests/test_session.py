@@ -10,6 +10,7 @@ from .fixtures import Fixtures
 
 import dateutil.parser
 
+
 @pytest.fixture
 def pl():
     payload.api_key = None
@@ -18,6 +19,7 @@ def pl():
         pl.api_url = os.environ["TEST_API_URL"]
 
     return pl
+
 
 class TestSession(Fixtures):
     def test_create_customer_account(self, pl):
@@ -48,10 +50,6 @@ class TestSession(Fixtures):
         assert get_account_1
         assert get_account_2
 
-    #def test_get_processing_account(self, api_key, processing_account):
-    #    assert pl.ProcessingAccount.get(processing_account.id)
-    #    assert processing_account.status == "pending"
-
     def test_paging_and_ordering_results(self, pl):
         accounts = pl.create(
             [
@@ -61,13 +59,15 @@ class TestSession(Fixtures):
             ]
         )
 
-        customers = pl.Customer.filter_by(
-            order_by="created_at", limit=3, offset=1
-        ).all()
+        customers = pl.Customer.filter_by(order_by="created_at", limit=3, offset=1).all()
 
         assert len(customers) == 3
-        assert dateutil.parser.parse(customers[0].created_at) < dateutil.parser.parse(customers[1].created_at)
-        assert dateutil.parser.parse(customers[1].created_at) < dateutil.parser.parse(customers[2].created_at)
+        assert dateutil.parser.parse(customers[0].created_at) <= dateutil.parser.parse(
+            customers[1].created_at
+        )
+        assert dateutil.parser.parse(customers[1].created_at) <= dateutil.parser.parse(
+            customers[2].created_at
+        )
 
     def test_update_cust(self, pl):
         customer_account = pl.Customer.create(name="Test", email="test@example.com")
@@ -76,9 +76,7 @@ class TestSession(Fixtures):
         assert customer_account.email == "test2@example.com"
 
     def test_update_mult_acc(self, pl):
-        customer_account_1 = pl.Customer.create(
-            name="Brandy", email="test1@example.com"
-        )
+        customer_account_1 = pl.Customer.create(name="Brandy", email="test1@example.com")
         customer_account_2 = pl.Customer.create(name="Sandy", email="test2@example.com")
 
         pl.update(

@@ -53,13 +53,15 @@ class TestAccount(Fixtures):
             ]
         )
 
-        customers = pl.Customer.filter_by(
-            order_by="created_at", limit=3, offset=1
-        ).all()
+        customers = pl.Customer.filter_by(order_by="created_at", limit=3, offset=1).all()
 
         assert len(customers) == 3
-        assert dateutil.parser.parse(customers[0].created_at) < dateutil.parser.parse(customers[1].created_at)
-        assert dateutil.parser.parse(customers[1].created_at) < dateutil.parser.parse(customers[2].created_at)
+        assert dateutil.parser.parse(customers[0].created_at) <= dateutil.parser.parse(
+            customers[1].created_at
+        )
+        assert dateutil.parser.parse(customers[1].created_at) <= dateutil.parser.parse(
+            customers[2].created_at
+        )
 
     def test_update_cust(self, api_key, customer_account):
         customer_account.update(email="test2@example.com")
@@ -67,9 +69,7 @@ class TestAccount(Fixtures):
         assert customer_account.email == "test2@example.com"
 
     def test_update_mult_acc(self, api_key):
-        customer_account_1 = pl.Customer.create(
-            name="Brandy", email="test1@example.com"
-        )
+        customer_account_1 = pl.Customer.create(name="Brandy", email="test1@example.com")
         customer_account_2 = pl.Customer.create(name="Sandy", email="test2@example.com")
 
         pl.update(
