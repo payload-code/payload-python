@@ -1,6 +1,6 @@
 [project]
 name = "payload-api"
-version = "0.4.6"
+version = "0.4.7"
 description = "Payload Python Library"
 authors = [
     {name = "Ian Halpern", email = "ian@payload.co"},
@@ -28,5 +28,14 @@ dev = [
     "pathlib",
     "pytest",
     "python-dateutil",
-    "mock"
+    "mock",
+    "pylint"
 ]
+
+[tool.pdm.scripts]
+_.env_file = ".env"
+
+[tool.black]
+line-length = 96
+target-version = ['py38']
+skip-string-normalization = true

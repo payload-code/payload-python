@@ -8,11 +8,10 @@ from .fixtures import Fixtures
 from payload.exceptions import NotFound
 
 
-
 @pytest.fixture
 def invoice(processing_account, customer_account):
     invoice = pl.Invoice.create(
-        type="bill",
+        type='bill',
         processing_id=processing_account.id,
         due_date=datetime.datetime.today().strftime('%Y-%m-%d'),
         customer_id=customer_account.id,
@@ -25,17 +24,21 @@ def invoice(processing_account, customer_account):
 class TestInvoice(Fixtures):
     def test_create_invoice(self, invoice):
         assert invoice.due_date == datetime.datetime.today().strftime('%Y-%m-%d')
-        assert invoice.status == "unpaid"
+        assert invoice.status == 'unpaid'
 
     def test_pay_invoice(self, invoice, customer_account):
         assert invoice.due_date == datetime.datetime.today().strftime('%Y-%m-%d')
-        assert invoice.status == "unpaid"
+        assert invoice.status == 'unpaid'
 
         card_payment = pl.Card.create(
-            account_id=customer_account.id, card_number="4242 4242 4242 4242", expiry='12/35', card_code='123'
+            account_id=customer_account.id,
+            card_number='4242 4242 4242 4242',
+            expiry='12/35',
+            card_code='123',
+            billing_address=dict(postal_code='11111'),
         )
 
-        if invoice.status != "paid":
+        if invoice.status != 'paid':
             pl.Payment.create(
                 amount=invoice.amount_due,
                 customer_id=customer_account.id,
@@ -44,7 +47,7 @@ class TestInvoice(Fixtures):
             )
 
         get_invoice = pl.Invoice.get(invoice.id)
-        assert get_invoice.status == "paid"
+        assert get_invoice.status == 'paid'
 
     def test_delete_invoice(self, invoice):
         with pytest.raises(NotFound):
