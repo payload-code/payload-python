@@ -9,7 +9,7 @@ class ClientToken(AccessToken):
 class OAuthToken(ARMObject):
     __spec__ = { 
         'object': 'oauth_token',
-        'endpoint': '/oauth/token/',
+        'endpoint': '/oauth/token',
     }
 
 class Account(ARMObject):
