@@ -7,10 +7,7 @@ class ClientToken(AccessToken):
     __spec__ = { 'polymorphic': { 'type': 'client' } }
 
 class OAuthToken(ARMObject):
-    __spec__ = { 
-        'object': 'oauth_token',
-        'endpoint': '/oauth/token',
-    }
+    __spec__ = { 'endpoint': '/oauth/token', 'object': 'oauth_token' }
 
 class Account(ARMObject):
     __spec__ = { 'object': 'account' }
