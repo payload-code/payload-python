@@ -1,13 +1,19 @@
 [project]
 name = "payload-api"
-version = "0.4.8"
+version = "0.4.9"
 description = "Payload Python Library"
 authors = [
-    {name = "Ian Halpern", email = "ian@payload.co"},
+    {name = "Payload", email = "help@payload.co"},
 ]
 dependencies = ["requests", "six", "urllib3>=1.26.5"]
 requires-python = ">=3.7"
+readme = "README.md"
 license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://payload.co"
+Documentation = "https://docs.payload.co"
+Repository = "https://github.com/payload-code/payload-python"
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]
