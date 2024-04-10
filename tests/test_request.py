@@ -5,7 +5,6 @@ from payload.utils import (
     data2object,
     convert_fieldmap,
     object2data,
-    map_attrs,
 )
 
 from payload.utils import get_object_cls
@@ -72,7 +71,7 @@ def arm_request_from_class(arm_object_class, mock_session):
 
 @pytest.fixture
 def mock_session():
-    return Mock(api_url="test", api_key="test")
+    return Mock(api_url='test', api_key='test')
 
 
 @pytest.fixture
@@ -90,9 +89,9 @@ def test_armrequest_init():
     arm_request = ARMRequest(MockArmObject, session)
     assert arm_request.Object == MockArmObject
     assert arm_request.session == session
-    assert arm_request._filters == []
-    assert arm_request._attrs == []
-    assert arm_request._group_by == []
+    assert not arm_request._filters
+    assert not arm_request._attrs
+    assert not arm_request._group_by
 
 
 @pytest.mark.parametrize(
@@ -104,9 +103,7 @@ def test_armrequest_init():
         },
         {'obj': {'name': 'Test Object'}, 'expected_json': {'name': 'Test Object'}},
         {
-            'obj': [
-                MockArmObject(_session=Mock(), name='Test Object') for _ in range(2)
-            ],
+            'obj': [MockArmObject(_session=Mock(), name='Test Object') for _ in range(2)],
             'expected_json': {
                 'object': 'list',
                 'values': [{'name': 'Test Object'}, {'name': 'Test Object'}],
@@ -128,7 +125,9 @@ def test_armrequest_init():
         {
             'obj': [Account(), Transaction()],
             'expected_exception': TypeError,
-            'expected_exception_message': 'Bulk create requires all objects to be of the same type',
+            'expected_exception_message': (
+                'Bulk create requires all objects to be of the same type'
+            ),
         },
         {'obj': [], 'expected_json': {}},
     ],
@@ -193,7 +192,9 @@ def test_armrequest_create(mock_request, test_case, arm_request):
         {
             'objects': [Account(id='1'), Transaction(id='1')],
             'expected_exception': TypeError,
-            'expected_exception_message': 'Bulk delete requires all objects to be of the same type',
+            'expected_exception_message': (
+                'Bulk delete requires all objects to be of the same type'
+            ),
         },
     ],
     ids=[
@@ -239,9 +240,7 @@ def test_armrequest_delete(mock_request, test_case, arm_request):
             },
         },
         {
-            'objects': [
-                ({'id': '1', 'name': 'Test Object'}, {'name': 'Updated Object'})
-            ],
+            'objects': [({'id': '1', 'name': 'Test Object'}, {'name': 'Updated Object'})],
             'values': {},
             'expected_exception': TypeError,
             'expected_exception_message': 'Bulk update requires ARMObject object types',
@@ -306,7 +305,9 @@ def test_armrequest_delete(mock_request, test_case, arm_request):
             ],
             'values': {},
             'expected_exception': TypeError,
-            'expected_exception_message': 'Bulk update requires all objects to be of the same type',
+            'expected_exception_message': (
+                'Bulk update requires all objects to be of the same type'
+            ),
         },
     ],
     ids=[
@@ -338,20 +339,30 @@ def test_armrequest_update(mock_request, test_case, arm_request):
         else:
             mock_request.assert_called_once_with('put', json=test_case['expected_json'])
 
-@pytest.mark.parametrize('attrs, expected_filters', [
-    (dict(attr1='value1', attr2='value2'), [['attr1', 'value1', 'value1'], ['attr2', 'value2', 'value2']]),
-    (dict(attr=dict(nested='value')), [['attr[nested]', 'value', 'value']]),
-    ([Attr.attr1=='value1'],[['attr1', 'value1', 'value1']]),
-    ([Attr.attr1!='value1'],[['attr1', '!value1', 'value1']]),
-    ([Attr.attr1>'value1'],[['attr1', '>value1', 'value1']]),
-    ([Attr.attr1>='value1'],[['attr1', '>=value1', 'value1']]),
-    ([Attr.attr1<'value1'],[['attr1', '<value1', 'value1']]),
-    ([Attr.attr1<='value1'],[['attr1', '<=value1', 'value1']]),
-    ([Attr.attr1.contains('value1')],[['attr1', '?*value1', 'value1']]),
-    ([Attr.attr1.func() == 'value1'],[['func(attr1)', 'value1', 'value1']]),
-    ([Attr.attr1.nested.func() == 'value1'],[['func(attr1[nested])', 'value1', 'value1']]),
-    ([Attr.attr1.nested.func() != 'value1'],[['func(attr1[nested])', '!value1', 'value1']]),
-])
+
+@pytest.mark.parametrize(
+    'attrs, expected_filters',
+    [
+        (
+            dict(attr1='value1', attr2='value2'),
+            [['attr1', 'value1', 'value1'], ['attr2', 'value2', 'value2']],
+        ),
+        (dict(attr=dict(nested='value')), [['attr[nested]', 'value', 'value']]),
+        ([Attr.attr1 == 'value1'], [['attr1', 'value1', 'value1']]),
+        ([Attr.attr1 != 'value1'], [['attr1', '!value1', 'value1']]),
+        ([Attr.attr1 > 'value1'], [['attr1', '>value1', 'value1']]),
+        ([Attr.attr1 >= 'value1'], [['attr1', '>=value1', 'value1']]),
+        ([Attr.attr1 < 'value1'], [['attr1', '<value1', 'value1']]),
+        ([Attr.attr1 <= 'value1'], [['attr1', '<=value1', 'value1']]),
+        ([Attr.attr1.contains('value1')], [['attr1', '?*value1', 'value1']]),
+        ([Attr.attr1.func() == 'value1'], [['func(attr1)', 'value1', 'value1']]),
+        ([Attr.attr1.nested.func() == 'value1'], [['func(attr1[nested])', 'value1', 'value1']]),
+        (
+            [Attr.attr1.nested.func() != 'value1'],
+            [['func(attr1[nested])', '!value1', 'value1']],
+        ),
+    ],
+)
 def test_armrequest_filter_by(arm_request, attrs, expected_filters):
     if isinstance(attrs, dict):
         request = arm_request.filter_by(**attrs)
@@ -460,9 +471,7 @@ def test_armrequest_request_params(arm_request, mock_response):
     test_params = {'param1': 'value1'}
 
     with patch('requests.get') as mock_get:
-        mock_response.json.return_value = {
-            'object': arm_request.Object.__spec__['object']
-        }
+        mock_response.json.return_value = {'object': arm_request.Object.__spec__['object']}
         mock_response.status_code = 200
         mock_get.return_value = mock_response
 
@@ -562,9 +571,7 @@ def test_armrequest_request_raise_bad_request(arm_request, mock_response):
 def test_armrequest_request_non_matching_error_and_http_code(arm_request):
     with patch(
         'requests.get',
-        return_value=Mock(
-            status_code=400, json=lambda: {'error_type': 'InternalServerError'}
-        ),
+        return_value=Mock(status_code=400, json=lambda: {'error_type': 'InternalServerError'}),
     ) as mock_get:
         with pytest.raises(payload.BadRequest):
             arm_request._request('get')
@@ -626,9 +633,7 @@ def test_data2object(arm_object_class):
     field_map = set()
     session = None
     expected = (
-        arm_object_class['Object'](**item_data)
-        if arm_object_class['Object']
-        else item_data
+        arm_object_class['Object'](**item_data) if arm_object_class['Object'] else item_data
     )
     assert data2object(item_data, field_map, session) is expected
 

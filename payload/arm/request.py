@@ -6,49 +6,51 @@ import payload
 import requests
 import copy
 
-from ..utils import (convert_fieldmap, map_attrs, map_object,
-                     nested_qstring_keys, object2data)
+from ..utils import convert_fieldmap, map_object, nested_qstring_keys, object2data
 from .attr import Attr
 from .object import ARMObject
 
-if sys.version_info >= (3,0):
+if sys.version_info >= (3, 0):
     from urllib.parse import urljoin
 else:
     from urlparse import urljoin
 
-class ARMRequest(object):
 
+class ARMRequest(object):
     def __init__(self, Object=None, session=None):
         self.Object = Object
         self.session = session
-        self._filters  = []
-        self._attrs    = []
+        self._filters = []
+        self._attrs = []
         self._group_by = []
 
     def _request(self, method, id=None, headers=None, params=None, json=None):
-        session  = self.session or payload
+        session = self.session or payload
         endpoint = self.Object.__spec__['endpoint']
-        headers  = headers or {}
-        params   = nested_qstring_keys(params or {})
-        auth     = (session.api_key, '')
-        files    = {}
+        headers = headers or {}
+        params = nested_qstring_keys(params or {})
+        auth = (session.api_key, '')
+        files = {}
 
         if json:
             flat_data = nested_qstring_keys(copy.copy(json))
             for k in list(flat_data):
-                if hasattr(flat_data[k], 'read'): files[k] = flat_data.pop(k)
+                if hasattr(flat_data[k], 'read'):
+                    files[k] = flat_data.pop(k)
 
-        if id: endpoint = f"{endpoint}/{id}"
+        if id:
+            endpoint = f'{endpoint}/{id}'
 
         if self._filters:
-            for k, v in dict( (f.attr, f.opval) for f in self._filters ).items():
-                if k not in params: params[k] = v
+            for k, v in dict((f.attr, f.opval) for f in self._filters).items():
+                if k not in params:
+                    params[k] = v
 
         if self._attrs:
-            params['fields'] = list(map(str,self._attrs))
+            params['fields'] = list(map(str, self._attrs))
 
         if self._group_by:
-            params['group_by'] = list(map(str,self._group_by))
+            params['group_by'] = list(map(str, self._group_by))
 
         convert_fieldmap(params, self.Object.field_map)
         if json:
@@ -61,16 +63,16 @@ class ARMRequest(object):
                 params=params,
                 auth=auth,
                 data=flat_data,
-                files=files
-                )
+                files=files,
+            )
         else:
             response = getattr(requests, method)(
                 urljoin(session.api_url, endpoint.strip('/')),
                 headers=headers,
                 params=params,
                 auth=auth,
-                json=json
-                )
+                json=json,
+            )
         try:
             data = response.json()
 
@@ -91,10 +93,16 @@ class ARMRequest(object):
                 data['_session'] = self.session
                 return map_object(data)
         else:
-            errors = [ err for _ in payload.PayloadError.__subclasses__() for err in _.__subclasses__()+[_] ]
+            errors = [
+                err
+                for _ in payload.PayloadError.__subclasses__()
+                for err in _.__subclasses__() + [_]
+            ]
             for Error in errors:
-                if Error.__name__ != data.get('error_type') \
-                or Error.http_code != response.status_code:
+                if (
+                    Error.__name__ != data.get('error_type')
+                    or Error.http_code != response.status_code
+                ):
                     continue
                 raise Error(data.get('description'), data)
             if response.status_code == 500:
@@ -116,66 +124,68 @@ class ARMRequest(object):
 
     def create(self, obj=None, **values):
         obj = obj or values
-        if isinstance( obj, list ):
+        if isinstance(obj, list):
             for o in obj:
-                if not self.Object and not isinstance( o, ARMObject ):
+                if not self.Object and not isinstance(o, ARMObject):
                     raise TypeError('Bulk create requires ARMObject object types')
                 if not self.Object:
                     self.Object = o.__class__
-                elif isinstance( o, dict ):
-                    o.update(self.Object.__spec__.get('polymorphic',{}))
-                elif not isinstance( o, self.Object ):
+                elif isinstance(o, dict):
+                    o.update(self.Object.__spec__.get('polymorphic', {}))
+                elif not isinstance(o, self.Object):
                     raise TypeError('Bulk create requires all objects to be of the same type')
-            obj = { 'object': 'list', 'values': obj }
-        elif isinstance( obj, dict ):
-            obj.update(self.Object.__spec__.get('polymorphic',{}))
+            obj = {'object': 'list', 'values': obj}
+        elif isinstance(obj, dict):
+            obj.update(self.Object.__spec__.get('polymorphic', {}))
 
         obj = object2data(obj)
         return self._request('post', json=obj)
 
     def delete(self, objects=None):
-        if isinstance( objects, list ):
+        if isinstance(objects, list):
             if not objects:
                 raise ValueError('List must not be empty')
             for o in objects:
-                if not isinstance( o, ARMObject ):
+                if not isinstance(o, ARMObject):
                     raise TypeError('Bulk delete requires ARMObject object types')
                 if not self.Object:
                     self.Object = o.__class__
-                elif not isinstance( o, self.Object ):
+                elif not isinstance(o, self.Object):
                     raise TypeError('Bulk delete requires all objects to be of the same type')
-            delete_query = '|'.join([ obj.id for obj in objects ])
+            delete_query = '|'.join([obj.id for obj in objects])
             return self._request('delete', params={'id': delete_query, 'mode': 'query'})
-        elif isinstance( objects, ARMObject ):
+        elif isinstance(objects, ARMObject):
             self.Object = objects.__class__
             return self._request('delete', id=objects.id)
         elif objects is None and self.Object and self._filters:
-            return self._request('delete', params={'mode':'query'})
+            return self._request('delete', params={'mode': 'query'})
         else:
             raise TypeError('Bulk delete requires ARMObject object types')
 
     def update(self, objects=None, **values):
         if objects:
-            if not isinstance( objects, list ):
+            if not isinstance(objects, list):
                 raise ValueError('first parameter must be a list of updates')
-            if not objects or not isinstance( objects[0], (list, tuple) ):
+            if not objects or not isinstance(objects[0], (list, tuple)):
                 raise ValueError('first parameter must be a list of updates')
             for o, upd in objects:
-                if not isinstance( o, ARMObject ):
+                if not isinstance(o, ARMObject):
                     raise TypeError('Bulk update requires ARMObject object types')
                 if not self.Object:
                     self.Object = o.__class__
-                elif not isinstance( o, self.Object ):
+                elif not isinstance(o, self.Object):
                     raise TypeError('Bulk update requires all objects to be of the same type')
-            updates = { 'object': 'list', 'values':
-                list(map( lambda upd: dict( upd[1], id=upd[0].id ), objects )) }
+            updates = {
+                'object': 'list',
+                'values': list(map(lambda upd: dict(upd[1], id=upd[0].id), objects)),
+            }
             return self._request('put', json=updates)
-        return self._request('put', params={'mode':'query'}, json=values)
+        return self._request('put', params={'mode': 'query'}, json=values)
 
     def filter_by(self, *filters, **kw_filters):
         self._filters.extend(filters)
         for key, val in nested_qstring_keys(kw_filters).items():
-            self._filters.append( getattr( Attr, key ) == val )
+            self._filters.append(getattr(Attr, key) == val)
         return self
 
     def all(self):
@@ -183,4 +193,5 @@ class ARMRequest(object):
 
     def first(self):
         resp = self._request('get', params=dict(limit=1))
-        if resp: return resp[0]
+        if resp:
+            return resp[0]
