@@ -1,0 +1,29 @@
+name: Publish Package to npmjs
+on:
+  release:
+    types: [published]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+      - run: |
+          sudo apt install python3-build twine
+
+          echo << EOF
+          [distutils]
+            index-servers =
+              payload-api
+          [payload-api]
+            repository = https://upload.pypi.org/legacy/
+            username = __token__
+            password = $PYPI_TOKEN
+          EOF > $HOME/.pypirc
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      - run: python3 -m build
+      - run: python3 -m twine upload --repository payload-api dist/*

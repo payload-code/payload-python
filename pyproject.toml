@@ -1,6 +1,6 @@
 [project]
 name = "payload-api"
-version = "0.4.7"
+version = "0.4.8"
 description = "Payload Python Library"
 authors = [
     {name = "Ian Halpern", email = "ian@payload.co"},
@@ -37,5 +37,5 @@ _.env_file = ".env"
 
 [tool.black]
 line-length = 96
-target-version = ['py38']
+target-version = ['py311']
 skip-string-normalization = true
