@@ -25,7 +25,10 @@ class TestPaymentMethod(Fixtures):
             description=rand_description,
             processing_id=processing_account.id,
             payment_method=pl.Card(
-                card_number='4242 4242 4242 4242', expiry='05/35', card_code='123'
+                card_number='4242 4242 4242 4242',
+                expiry='05/35',
+                card_code='123',
+                billing_address=dict(postal_code='11111'),
             ),
         )
 
@@ -91,7 +94,7 @@ class TestPaymentMethod(Fixtures):
 
     def test_partial_refund_bank_payment(self, api_key, bank_payment):
         refund = pl.Refund.create(
-            amount=10, ledger=[pl.Ledger(assoc_transaction_id=bank_payment.id)]
+            amount=10, ledger=[pl.Ledger(amount=10, assoc_transaction_id=bank_payment.id)]
         )
 
         assert refund.type == 'refund'
