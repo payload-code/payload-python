@@ -73,7 +73,11 @@ class Fixtures(object):
         card_payment = pl.Payment.create(
             processing_id=processing_account.id,
             amount=random.random() * 100,
-            payment_method=pl.Card(card_number='4242 4242 4242 4242', expiry='12/25'),
+            payment_method=pl.Card(
+                card_number='4242 4242 4242 4242',
+                expiry='12/35',
+                billing_address=dict(postal_code='11111'),
+            ),
         )
         return card_payment
 
