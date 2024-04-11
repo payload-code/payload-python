@@ -30,6 +30,17 @@ import payload as pl
 pl.api_key = 'secret_key_3bW9JMZtPVDOfFNzwRdfE'
 ```
 
+### OAuth Authentication
+
+```python
+pl.OAuthToken.create(
+    code=code,
+    grant_type='authorization_code',
+    client_id='org_f77fqR3fH4XUP8vEmqueOGOY',
+    client_secret='secret_key_3bW9JMZtPVDOfFNzwRdfE'
+    )
+```
+
 ----------------------------
 
 Session based:
