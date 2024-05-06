@@ -1,6 +1,6 @@
 [project]
 name = "payload-api"
-version = "0.4.9"
+version = "0.4.10"
 description = "Payload Python Library"
 authors = [
     {name = "Payload", email = "help@payload.com"},
