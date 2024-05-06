@@ -33,7 +33,7 @@ class Fixtures(object):
                     'state_incorporated': 'NY',
                     'postal_code': '11238',
                     'phone_number': '(111) 222-3333',
-                    'website': 'http://www.payload.co',
+                    'website': 'http://www.payload.com',
                     'start_date': '05/01/2015',
                     'contact_name': 'Test Person',
                     'contact_email': 'test.person@example.com',
