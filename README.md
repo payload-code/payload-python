@@ -1,6 +1,6 @@
 # Payload Python Library
 
-A Python library for integrating [Payload](https://payload.co).
+A Python library for integrating [Payload](https://payload.com).
 
 ## Installation
 
@@ -118,4 +118,4 @@ TEST_SECRET_KEY=test_api_key pytest tests/{__FILENAME__}.py
 ## Documentation
 
 To get further information on Payload's Python library and API capabilities,
-visit the unabridged [Payload Documentation](https://docs.payload.co/?python).
+visit the unabridged [Payload Documentation](https://docs.payload.com/?python).

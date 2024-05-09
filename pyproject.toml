@@ -1,9 +1,9 @@
 [project]
 name = "payload-api"
-version = "0.4.9"
+version = "0.4.10"
 description = "Payload Python Library"
 authors = [
-    {name = "Payload", email = "help@payload.co"},
+    {name = "Payload", email = "help@payload.com"},
 ]
 dependencies = ["requests", "six", "urllib3>=1.26.5"]
 requires-python = ">=3.7"
@@ -11,8 +11,8 @@ readme = "README.md"
 license = {text = "MIT"}
 
 [project.urls]
-Homepage = "https://payload.co"
-Documentation = "https://docs.payload.co"
+Homepage = "https://payload.com"
+Documentation = "https://docs.payload.com"
 Repository = "https://github.com/payload-code/payload-python"
 
 [build-system]
