@@ -6,7 +6,7 @@ authors = [
     {name = "Payload", email = "help@payload.com"},
 ]
 dependencies = ["requests", "six", "urllib3>=1.26.5"]
-requires-python = ">=3.7"
+requires-python = ">=3.6"
 readme = "README.md"
 license = {text = "MIT"}
 

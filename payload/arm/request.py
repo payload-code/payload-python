@@ -1,10 +1,9 @@
-import os
-import re
+import copy
 import sys
 
-import payload
 import requests
-import copy
+
+import payload
 
 from ..utils import convert_fieldmap, map_object, nested_qstring_keys, object2data
 from .attr import Attr
