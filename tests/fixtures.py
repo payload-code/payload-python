@@ -1,8 +1,10 @@
-import os
-import payload as pl
-import pytest
 import datetime
+import os
 import random
+
+import pytest
+
+import payload as pl
 
 
 class Fixtures(object):
@@ -32,6 +34,7 @@ class Fixtures(object):
                     'state_province': 'NY',
                     'state_incorporated': 'NY',
                     'postal_code': '11238',
+                    'country': 'US',
                     'phone_number': '(111) 222-3333',
                     'website': 'http://www.payload.com',
                     'start_date': '05/01/2015',
