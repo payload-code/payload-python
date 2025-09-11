@@ -1,8 +1,10 @@
-import os
-import payload as pl
-import pytest
 import datetime
+import os
 import random
+
+import pytest
+
+import payload as pl
 
 
 class Fixtures(object):
@@ -32,6 +34,7 @@ class Fixtures(object):
                     'state_province': 'NY',
                     'state_incorporated': 'NY',
                     'postal_code': '11238',
+                    'country': 'US',
                     'phone_number': '(111) 222-3333',
                     'website': 'http://www.payload.com',
                     'start_date': '05/01/2015',
@@ -76,6 +79,7 @@ class Fixtures(object):
             payment_method=pl.Card(
                 card_number='4242 4242 4242 4242',
                 expiry='12/35',
+                card_code='123',
                 billing_address=dict(postal_code='11111'),
             ),
         )
@@ -87,6 +91,7 @@ class Fixtures(object):
             type='payment',
             amount=random.random() * 1000,
             payment_method=pl.BankAccount(
+                account_holder='First Last',
                 account_number='1234567890',
                 routing_number='036001808',
                 account_type='checking',
@@ -101,6 +106,7 @@ class Fixtures(object):
             type='payment',
             amount=random.random() * 100,
             payment_method=pl.BankAccount(
+                account_holder='First Last',
                 account_number='1234567890',
                 routing_number='036001808',
                 account_type='checking',

@@ -1,11 +1,11 @@
 [project]
 name = "payload-api"
-version = "0.4.10"
+version = "0.4.11"
 description = "Payload Python Library"
 authors = [
     {name = "Payload", email = "help@payload.com"},
 ]
-dependencies = ["requests", "six", "urllib3>=1.26.5"]
+dependencies = ["requests", "six", "urllib3>=1.26.5", "importlib-metadata"]
 requires-python = ">=3.7"
 readme = "README.md"
 license = {text = "MIT"}

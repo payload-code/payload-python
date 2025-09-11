@@ -15,7 +15,9 @@ class TestTransaction(Fixtures):
         pl.Refund.create(
             amount=10,
             processing_id=processing_account.id,
-            payment_method=pl.Card(card_number="4242 4242 4242 4242", expiry="12/25"),
+            payment_method=pl.Card(
+                card_number="4242 4242 4242 4242", expiry="12/25", card_code="123"
+            ),
         )
 
         transactions = (
