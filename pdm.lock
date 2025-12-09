@@ -3,10 +3,12 @@
 
 [metadata]
 groups = ["default", "dev"]
-cross_platform = true
-static_urls = false
-lock_version = "4.3"
-content_hash = "sha256:3ee5e7ef83012dd8dc138af0f2a410020b0d6cf21df0fccb54205233362a419c"
+strategy = ["cross_platform"]
+lock_version = "4.5.0"
+content_hash = "sha256:a64fb9823184a96d22c4d16e69685c05e756188e2aea4c16c74cca1eecd8c818"
+
+[[metadata.targets]]
+requires_python = ">=3.7"
 
 [[package]]
 name = "astroid"

@@ -31,6 +31,9 @@ class ARMRequest(object):
         auth = (session.api_key, '')
         files = {}
 
+        if session.api_version:
+            headers['X-API-Version'] = session.api_version
+
         if json:
             flat_data = nested_qstring_keys(copy.copy(json))
             for k in list(flat_data):
@@ -63,6 +66,7 @@ class ARMRequest(object):
                 auth=auth,
                 data=flat_data,
                 files=files,
+                headers=headers,
             )
         else:
             response = getattr(requests, method)(
