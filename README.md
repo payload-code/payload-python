@@ -4,7 +4,7 @@ A Python library for integrating [Payload](https://payload.com).
 
 ## Installation
 
-## Install using pip
+### Install using pip
 
 ```bash
 pip install payload-api
@@ -39,6 +39,27 @@ import payload
 pl = payload.Session('secret_key_3bW9JMZtPVDOfFNzwRdfE')
 ```
 
+### API Versioning
+
+The Payload API supports multiple versions. You can specify which version to use when making requests:
+
+```python
+import payload as pl
+pl.api_key = 'secret_key_3bW9JMZtPVDOfFNzwRdfE'
+pl.api_version = 'v2'  # Use API v2
+```
+
+Or with sessions:
+
+```python
+import payload
+pl = payload.Session(
+    'secret_key_3bW9JMZtPVDOfFNzwRdfE',
+    api_version='v2'
+)
+```
+
+API v2 introduces new objects including `Profile`, `Intent`, `Entity`, `Transfer`, `ProcessingAgreement`, and more. See the [Payload API Documentation](https://docs.payload.com) for details on API versions.
 
 ### Creating an Object
 
@@ -60,7 +81,9 @@ customer = pl.Customer.create(
 payment = pl.Payment.create(
     amount=100.0,
     payment_method=pl.Card(
-        card_number='4242 4242 4242 4242'
+        card_number='4242 4242 4242 4242',
+        expiry='12/28',
+        card_code='123'
     )
 )
 ```
@@ -107,12 +130,21 @@ payments = pl.Payment.filter_by(
 
 ### Testing the Payload Python Library
 
-Tests are contained within the tests/ directory. To run a test file, once within the
-pipenv shell, enter the command in terminal
+Tests are contained within the tests/ directory. To run tests:
 
 ```bash
-TEST_SECRET_KEY=test_api_key pytest tests/{__FILENAME__}.py
- ```
+# Install dependencies
+pdm install
+
+# Run integration tests
+TEST_SECRET_KEY=test_api_key pdm run pytest tests/int/
+
+# Run unit tests
+pdm run pytest tests/unit/
+
+# Run a specific test file
+TEST_SECRET_KEY=test_api_key pdm run pytest tests/int/test_transaction.py
+```
 
 
 ## Documentation
