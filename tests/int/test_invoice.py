@@ -33,7 +33,7 @@ class TestInvoice(Fixtures):
         card_payment = pl.Card.create(
             account_id=customer_account.id,
             card_number='4242 4242 4242 4242',
-            expiry='12/35',
+            expiry=self.card_expiry(),
             card_code='123',
             billing_address=dict(postal_code='11111'),
         )

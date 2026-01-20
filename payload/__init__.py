@@ -4,7 +4,7 @@ Payload python library
 
 Documentation: https://docs.payload.com
 
-:copyright: (c) 2025 Payload (http://payload.com)
+:copyright: (c) 2026 Payload (http://payload.com)
 :license: MIT License
 """
 
@@ -62,10 +62,24 @@ __all__ = [
     'PaymentLink',
     'PaymentMethod',
     'ProcessingAccount',
+    'ProcessingRule',
     'Refund',
     'Transaction',
     'User',
     'Webhook',
+    # New API v2 Objects
+    'Profile',
+    'BillingItem',
+    'Intent',
+    'InvoiceItem',
+    'PaymentAllocation',
+    'Entity',
+    'Stakeholder',
+    'ProcessingAgreement',
+    'Transfer',
+    'TransactionOperation',
+    'CheckFront',
+    'CheckBack',
 ]
 
 from . import objects
@@ -85,31 +99,44 @@ from .exceptions import (
     Unauthorized,
     UnknownResponse,
 )
-from .objects import (
+from .objects import (  # API v2 Objects
     AccessToken,
     Account,
     BankAccount,
     BillingCharge,
+    BillingItem,
     BillingSchedule,
     Card,
     ChargeItem,
+    CheckBack,
+    CheckFront,
     ClientToken,
     Credit,
     Customer,
     Deposit,
+    Entity,
+    Intent,
     Invoice,
+    InvoiceItem,
     Ledger,
     LineItem,
     OAuthToken,
     Org,
     Payment,
     PaymentActivation,
+    PaymentAllocation,
     PaymentItem,
     PaymentLink,
     PaymentMethod,
     ProcessingAccount,
+    ProcessingAgreement,
+    ProcessingRule,
+    Profile,
     Refund,
+    Stakeholder,
     Transaction,
+    TransactionOperation,
+    Transfer,
     User,
     Webhook,
 )
