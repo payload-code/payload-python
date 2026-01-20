@@ -162,3 +162,7 @@ class CheckBack(ARMObject):
 
 class ProcessingRule(ARMObject):
     __spec__ = {"object": "processing_rule"}
+
+
+class ProcessingSettings(ARMObject):
+    __spec__ = {"object": "processing_settings"}

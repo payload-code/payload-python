@@ -80,6 +80,7 @@ __all__ = [
     'TransactionOperation',
     'CheckFront',
     'CheckBack',
+    'ProcessingSettings',
 ]
 
 from . import objects
@@ -131,6 +132,7 @@ from .objects import (  # API v2 Objects
     ProcessingAccount,
     ProcessingAgreement,
     ProcessingRule,
+    ProcessingSettings,
     Profile,
     Refund,
     Stakeholder,
