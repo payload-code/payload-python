@@ -26,7 +26,7 @@ class TestPaymentMethod(Fixtures):
             processing_id=processing_account.id,
             payment_method=pl.Card(
                 card_number='4242 4242 4242 4242',
-                expiry='05/35',
+                expiry=self.card_expiry(),
                 card_code='123',
                 billing_address=dict(postal_code='11111'),
             ),
@@ -75,7 +75,7 @@ class TestPaymentMethod(Fixtures):
             amount=10,
             processing_id=processing_account.id,
             payment_method=pl.Card(
-                card_number='4242 4242 4242 4242', expiry='12/25', card_code='123'
+                card_number='4242 4242 4242 4242', expiry=self.card_expiry(), card_code='123'
             ),
         )
 
@@ -104,5 +104,5 @@ class TestPaymentMethod(Fixtures):
     def test_invalid_payment_method_type_invalid_attributes(self, api_key):
         with pytest.raises(BadRequest):
             pl.Transaction.create(
-                type='invalid', card_number='4242 4242 4242 4242', expiry='12/25'
+                type='invalid', card_number='4242 4242 4242 4242', expiry=self.card_expiry()
             )

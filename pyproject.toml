@@ -1,6 +1,6 @@
 [project]
 name = "payload-api"
-version = "0.4.11"
+version = "0.5.0"
 description = "Payload Python Library"
 authors = [
     {name = "Payload", email = "help@payload.com"},
@@ -35,7 +35,8 @@ dev = [
     "pytest",
     "python-dateutil",
     "mock",
-    "pylint"
+    "pylint",
+    "faker"
 ]
 
 [tool.pdm.scripts]

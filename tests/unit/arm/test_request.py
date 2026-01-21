@@ -1,25 +1,23 @@
-from payload.utils import (
-    get_object_cls,
-    map_object,
-    nested_qstring_keys,
-    data2object,
-    convert_fieldmap,
-    object2data,
-)
-
-from payload.utils import get_object_cls
-from mock import Mock, patch, call, create_autospec
-import pytest
-import payload
-from unittest.mock import Mock, patch
-from payload.arm.request import ARMRequest
+import inspect
+from unittest.mock import MagicMock, Mock, call, patch
 from urllib.parse import urljoin
 
-import inspect
-import payload.objects as objects_module
-from payload.objects import *
-from payload.arm.attr import Attr
+import pytest
 
+import payload
+import payload.objects as objects_module
+from payload.arm.attr import Attr
+from payload.arm.object import ARMObject
+from payload.arm.request import ARMRequest
+from payload.arm.session import Session
+from payload.objects import Account, Payment, PaymentItem, Transaction
+from payload.utils import (
+    convert_fieldmap,
+    data2object,
+    get_object_cls,
+    nested_qstring_keys,
+    object2data,
+)
 
 arm_object_classes = []
 
@@ -53,7 +51,7 @@ def assert_mock_get_called_with_correct_values(
         )
 
     if expected_files:
-        kwargs.update(dict(files=expected_files, data={}))
+        kwargs.update(dict(files=expected_files, data={}, headers={}))
     else:
         kwargs.update(dict(json=None, headers={}))
 
@@ -71,7 +69,7 @@ def arm_request_from_class(arm_object_class, mock_session):
 
 @pytest.fixture
 def mock_session():
-    return Mock(api_url='test', api_key='test')
+    return Mock(api_url='test', api_key='test', api_version=None)
 
 
 @pytest.fixture
@@ -611,39 +609,14 @@ def test_get_object_cls(arm_object_class):
     assert get_object_cls(item_data) == expected
 
 
-# Test nested_qstring_keys
-@pytest.mark.parametrize(
-    'base, expected',
-    [
-        ({'a': {'b': {'c': 1}}}, {'a[b][c]': 1}),
-        ({'x': [{'y': 2}, {'z': 3}]}, {'x[0][y]': 2, 'x[1][z]': 3}),
-        ({}, {}),
-    ],
-)
-def test_nested_qstring_keys(base, expected):
-    assert nested_qstring_keys(base) == expected
-
-
-# Test data2object
-@pytest.mark.parametrize('arm_object_class', arm_object_classes)
-def test_data2object(arm_object_class):
-    item_data = {'object': arm_object_class['object']}
-    if 'polymorphic' in arm_object_class:
-        item_data.update(arm_object_class['polymorphic'])
-    field_map = set()
-    session = None
-    expected = (
-        arm_object_class['Object'](**item_data) if arm_object_class['Object'] else item_data
-    )
-    assert data2object(item_data, field_map, session) is expected
-
-
 # Test convert_fieldmap
 @pytest.mark.parametrize('arm_object_class', arm_object_classes)
-def test_convert_fieldmap(arm_object_class):
+def test_convert_fieldmap_on_arm_object_classes(arm_object_class):
     obj = {'type': arm_object_class['object']}
     field_map = set(arm_object_class.keys()) - {'Object', 'object', 'polymorphic'}
-    expected = {arm_object_class['object']: {k: arm_object_class[k] for k in field_map}}
+    expected = obj.copy()
+    if mapped_fields := {k: arm_object_class[k] for k in field_map}:
+        expected[arm_object_class['object']] = mapped_fields
     convert_fieldmap(obj, field_map)
     assert obj == expected
 
@@ -803,3 +776,206 @@ def test_nested_qstring_keys(base, expected):
 def test_data2object(item, field_map, session, expected):
     result = data2object(item, field_map, session)
     assert result == expected
+
+
+class MockObject(ARMObject):
+    __spec__ = {'object': 'mock_object', 'endpoint': '/mock'}
+
+
+class TestARMRequestApiVersion:
+    """Unit tests for ARMRequest._request api_version header functionality"""
+
+    @patch('payload.arm.request.requests')
+    def test_api_version_header_included_when_set(self, mock_requests):
+        """Test that X-API-Version header is included when session.api_version is set"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.get.return_value = mock_response
+
+        # Create session with api_version
+        session = Session(
+            api_key='test_key', api_url='https://api.test.com', api_version='v2.1'
+        )
+
+        # Create request and execute
+        request = ARMRequest(Object=MockObject, session=session)
+        request.get('mock_123')
+
+        # Verify requests.get was called with X-API-Version header
+        mock_requests.get.assert_called_once()
+        call_kwargs = mock_requests.get.call_args[1]
+        assert 'headers' in call_kwargs
+        assert 'X-API-Version' in call_kwargs['headers']
+        assert call_kwargs['headers']['X-API-Version'] == 'v2.1'
+
+    @patch('payload.arm.request.requests')
+    def test_api_version_header_not_included_when_none(self, mock_requests):
+        """Test that X-API-Version header is not included when session.api_version is None"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.get.return_value = mock_response
+
+        # Create session without api_version
+        session = Session(api_key='test_key', api_url='https://api.test.com', api_version=None)
+
+        # Create request and execute
+        request = ARMRequest(Object=MockObject, session=session)
+        request.get('mock_123')
+
+        # Verify requests.get was called without X-API-Version header
+        mock_requests.get.assert_called_once()
+        call_kwargs = mock_requests.get.call_args[1]
+        headers = call_kwargs.get('headers', {})
+        assert 'X-API-Version' not in headers
+
+    @patch('payload.arm.request.requests')
+    @patch('payload.api_version', 'v2.2')
+    def test_api_version_header_uses_global_payload_when_no_session(self, mock_requests):
+        """Test that X-API-Version header uses global payload.api_version when no session provided"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.get.return_value = mock_response
+
+        # Create request without session (will use global payload module)
+        request = ARMRequest(Object=MockObject, session=None)
+        request.get('mock_123')
+
+        # Verify requests.get was called with X-API-Version header from global payload
+        mock_requests.get.assert_called_once()
+        call_kwargs = mock_requests.get.call_args[1]
+        assert 'headers' in call_kwargs
+        assert 'X-API-Version' in call_kwargs['headers']
+        assert call_kwargs['headers']['X-API-Version'] == 'v2.2'
+
+    @patch('payload.arm.request.requests')
+    def test_api_version_header_in_post_request(self, mock_requests):
+        """Test that X-API-Version header is included in POST requests"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.post.return_value = mock_response
+
+        # Create session with api_version
+        session = Session(
+            api_key='test_key', api_url='https://api.test.com', api_version='v2.3'
+        )
+
+        # Create request and execute
+        request = ARMRequest(Object=MockObject, session=session)
+        request.create({'field': 'value'})
+
+        # Verify requests.post was called with X-API-Version header
+        mock_requests.post.assert_called_once()
+        call_kwargs = mock_requests.post.call_args[1]
+        assert 'headers' in call_kwargs
+        assert 'X-API-Version' in call_kwargs['headers']
+        assert call_kwargs['headers']['X-API-Version'] == 'v2.3'
+
+    @patch('payload.arm.request.requests')
+    def test_api_version_header_in_put_request(self, mock_requests):
+        """Test that X-API-Version header is included in PUT requests"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.put.return_value = mock_response
+
+        # Create session with api_version
+        session = Session(
+            api_key='test_key', api_url='https://api.test.com', api_version='v2.4'
+        )
+
+        # Create request and execute update
+        request = ARMRequest(Object=MockObject, session=session)
+        request.update(field='new_value')
+
+        # Verify requests.put was called with X-API-Version header
+        mock_requests.put.assert_called_once()
+        call_kwargs = mock_requests.put.call_args[1]
+        assert 'headers' in call_kwargs
+        assert 'X-API-Version' in call_kwargs['headers']
+        assert call_kwargs['headers']['X-API-Version'] == 'v2.4'
+
+    @patch('payload.arm.request.requests')
+    def test_api_version_header_in_delete_request(self, mock_requests):
+        """Test that X-API-Version header is included in DELETE requests"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.delete.return_value = mock_response
+
+        # Create session with api_version
+        session = Session(
+            api_key='test_key', api_url='https://api.test.com', api_version='v2.5'
+        )
+
+        # Create mock object to delete
+        mock_obj = MockObject()
+        mock_obj.id = 'mock_123'
+
+        # Create request and execute delete
+        request = ARMRequest(Object=MockObject, session=session)
+        request.delete(mock_obj)
+
+        # Verify requests.delete was called with X-API-Version header
+        mock_requests.delete.assert_called_once()
+        call_kwargs = mock_requests.delete.call_args[1]
+        assert 'headers' in call_kwargs
+        assert 'X-API-Version' in call_kwargs['headers']
+        assert call_kwargs['headers']['X-API-Version'] == 'v2.5'
+
+    @patch('payload.arm.request.requests')
+    def test_api_version_header_with_existing_headers(self, mock_requests):
+        """Test that X-API-Version header is merged with existing headers"""
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            'object': 'mock_object',
+            'id': 'mock_123',
+        }
+        mock_requests.get.return_value = mock_response
+
+        # Create session with api_version
+        session = Session(
+            api_key='test_key', api_url='https://api.test.com', api_version='v2.6'
+        )
+
+        # Create request and execute with custom headers
+        request = ARMRequest(Object=MockObject, session=session)
+        request._request('get', id='mock_123', headers={'X-Custom-Header': 'custom_value'})
+
+        # Verify both headers are present
+        mock_requests.get.assert_called_once()
+        call_kwargs = mock_requests.get.call_args[1]
+        assert 'headers' in call_kwargs
+        assert 'X-API-Version' in call_kwargs['headers']
+        assert 'X-Custom-Header' in call_kwargs['headers']
+        assert call_kwargs['headers']['X-API-Version'] == 'v2.6'
+        assert call_kwargs['headers']['X-Custom-Header'] == 'custom_value'

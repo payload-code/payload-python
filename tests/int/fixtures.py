@@ -3,11 +3,19 @@ import os
 import random
 
 import pytest
+from faker import Faker
 
 import payload as pl
 
+fake = Faker()
+
 
 class Fixtures(object):
+    @staticmethod
+    def card_expiry():
+        """Generate a valid card expiration date in MM/YY format."""
+        return fake.credit_card_expire(date_format='%m/%y')
+
     @pytest.fixture(scope='session', autouse=True)
     def api_key(self):
         pl.api_key = os.environ['TEST_SECRET_KEY']
@@ -78,7 +86,7 @@ class Fixtures(object):
             amount=random.random() * 100,
             payment_method=pl.Card(
                 card_number='4242 4242 4242 4242',
-                expiry='12/35',
+                expiry=self.card_expiry(),
                 card_code='123',
                 billing_address=dict(postal_code='11111'),
             ),
