@@ -1,4 +1,5 @@
 import inspect
+import json as json_serializer
 from unittest.mock import MagicMock, Mock, call, patch
 from urllib.parse import urljoin
 
@@ -402,10 +403,235 @@ def test_armrequest_group_by(arm_request):
     assert arm_request._group_by == ['test_field']
 
 
+def test_armrequest_order_by(arm_request):
+    result = arm_request.order_by('test_field')
+    assert arm_request._order_by == ['test_field']
+    assert result is arm_request
+
+
+def test_armrequest_order_by_multiple_fields(arm_request):
+    arm_request.order_by('field1', 'field2')
+    assert arm_request._order_by == ['field1', 'field2']
+
+
+def test_armrequest_order_by_chaining(arm_request):
+    arm_request.order_by('field1').order_by('field2')
+    assert arm_request._order_by == ['field1', 'field2']
+
+
+def test_armrequest_limit(arm_request):
+    result = arm_request.limit(10)
+    assert arm_request._limit == 10
+    assert result is arm_request
+
+
+def test_armrequest_limit_overwrite(arm_request):
+    arm_request.limit(10).limit(20)
+    assert arm_request._limit == 20
+
+
+def test_armrequest_offset(arm_request):
+    result = arm_request.offset(5)
+    assert arm_request._offset == 5
+    assert result is arm_request
+
+
+def test_armrequest_offset_overwrite(arm_request):
+    arm_request.offset(5).offset(10)
+    assert arm_request._offset == 10
+
+
+def test_armrequest_limit_offset_chaining(arm_request):
+    result = arm_request.limit(10).offset(5)
+    assert arm_request._limit == 10
+    assert arm_request._offset == 5
+    assert result is arm_request
+
+
+def test_armrequest_getitem_with_slice(arm_request):
+    mock_results = [{'id': str(i)} for i in range(10, 20)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request[10:20]
+
+        # Verify offset and limit were set correctly
+        assert arm_request._offset == 10
+        assert arm_request._limit == 10
+
+        # Verify .all() was called and returned results
+        assert result == mock_results
+
+
+def test_armrequest_getitem_with_slice_zero_start(arm_request):
+    mock_results = [{'id': str(i)} for i in range(0, 10)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request[0:10]
+
+        # Zero start is falsy, so offset should not be set
+        assert arm_request._offset is None
+        assert arm_request._limit == 10
+
+        # Verify .all() was called and returned results
+        assert result == mock_results
+
+
+def test_armrequest_getitem_with_slice_large_range(arm_request):
+    mock_results = [{'id': str(i)} for i in range(100, 200)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request[100:200]
+
+        # Verify offset and limit were set correctly
+        assert arm_request._offset == 100
+        assert arm_request._limit == 100
+
+        # Verify .all() was called and returned results
+        assert result == mock_results
+
+
+def test_armrequest_getitem_with_slice_none_start(arm_request):
+    """Test slice with None start [:20]"""
+    mock_results = [{'id': str(i)} for i in range(0, 20)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request[:20]
+
+        # None start means no offset
+        assert arm_request._offset is None
+        assert arm_request._limit == 20
+
+        # Verify results returned
+        assert result == mock_results
+
+
+def test_armrequest_getitem_with_slice_none_stop(arm_request):
+    """Test slice with None stop [10:]"""
+    mock_results = [{'id': str(i)} for i in range(10, 100)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request[10:]
+
+        # Should set offset but not limit
+        assert arm_request._offset == 10
+        assert arm_request._limit is None
+
+        # Verify results returned
+        assert result == mock_results
+
+
+def test_armrequest_getitem_with_slice_both_none(arm_request):
+    """Test slice with both None [:]"""
+    mock_results = [{'id': str(i)} for i in range(0, 100)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request[:]
+
+        # Neither offset nor limit should be set
+        assert arm_request._offset is None
+        assert arm_request._limit is None
+
+        # Verify results returned (equivalent to .all())
+        assert result == mock_results
+
+
+def test_armrequest_getitem_with_integer_raises_typeerror(arm_request):
+    with pytest.raises(TypeError) as exc_info:
+        arm_request[5]
+    assert 'invalid key or index: 5' in str(exc_info.value)
+
+
+def test_armrequest_getitem_with_string_raises_typeerror(arm_request):
+    with pytest.raises(TypeError) as exc_info:
+        arm_request['invalid']
+    assert 'invalid key or index: invalid' in str(exc_info.value)
+
+
+def test_armrequest_getitem_with_none_raises_typeerror(arm_request):
+    with pytest.raises(TypeError) as exc_info:
+        arm_request[None]
+    assert 'invalid key or index: None' in str(exc_info.value)
+
+
+def test_armrequest_iter(arm_request):
+    mock_results = [
+        {'id': '1', 'name': 'Item 1'},
+        {'id': '2', 'name': 'Item 2'},
+        {'id': '3', 'name': 'Item 3'},
+    ]
+
+    with patch.object(ARMRequest, 'all', return_value=mock_results):
+        results = list(arm_request)
+
+        assert len(results) == 3
+        assert results[0] == mock_results[0]
+        assert results[1] == mock_results[1]
+        assert results[2] == mock_results[2]
+
+
+def test_armrequest_iter_empty(arm_request):
+    with patch.object(ARMRequest, 'all', return_value=[]):
+        results = list(arm_request)
+        assert results == []
+
+
+def test_armrequest_iter_in_for_loop(arm_request):
+    mock_results = [{'id': '1', 'name': 'Item 1'}, {'id': '2', 'name': 'Item 2'}]
+
+    with patch.object(ARMRequest, 'all', return_value=mock_results):
+        collected = []
+        for item in arm_request:
+            collected.append(item)
+
+        assert collected == mock_results
+
+
+def test_armrequest_iter_with_comprehension(arm_request):
+    mock_results = [
+        {'id': '1', 'name': 'Item 1'},
+        {'id': '2', 'name': 'Item 2'},
+        {'id': '3', 'name': 'Item 3'},
+    ]
+
+    with patch.object(ARMRequest, 'all', return_value=mock_results):
+        ids = [item['id'] for item in arm_request]
+        assert ids == ['1', '2', '3']
+
+
+def test_armrequest_iter_with_any(arm_request):
+    mock_results = [{'id': '1', 'name': 'Item 1'}]
+
+    with patch.object(ARMRequest, 'all', return_value=mock_results):
+        assert any(arm_request) is True
+
+
+def test_armrequest_iter_with_any_empty(arm_request):
+    with patch.object(ARMRequest, 'all', return_value=[]):
+        assert any(arm_request) is False
+
+
+def test_armrequest_getitem_chaining_with_filter(arm_request):
+    mock_results = [{'id': str(i), 'status': 'active'} for i in range(10, 20)]
+
+    with patch.object(ARMRequest, '_request', return_value=mock_results):
+        result = arm_request.filter_by(status='active')[10:20]
+
+        # Verify filter was applied
+        assert len(arm_request._filters) == 1
+
+        # Verify offset and limit were set correctly
+        assert arm_request._offset == 10
+        assert arm_request._limit == 10
+
+        # Verify .all() was called and returned results
+        assert result == mock_results
+
+
 def test_armrequest_request_files(arm_request, mock_response):
     test_files = {'file': Mock()}
 
-    mock_response.json.return_value = {'object': arm_request.Object.__spec__['object']}
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
     mock_response.status_code = 200
 
     with patch('requests.post', return_value=mock_response) as mock_post:
@@ -419,7 +645,8 @@ def test_armrequest_request_files(arm_request, mock_response):
 def test_armrequest_request_id(arm_request, mock_response):
     test_id = '1'
 
-    mock_response.json.return_value = {'object': arm_request.Object}
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
     mock_response.status_code = 200
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -434,7 +661,8 @@ def test_armrequest_request_filters(arm_request, mock_response):
         Attr.filter_attr2 == 'filter_val2',
     ]
 
-    mock_response.json.return_value = {'object': arm_request.Object.__spec__['object']}
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
     mock_response.status_code = 200
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -451,7 +679,8 @@ def test_armrequest_request_filters(arm_request, mock_response):
 def test_armrequest_request_group_by(arm_request, mock_response):
     test_group_by = ['group1', 'group2']
 
-    mock_response.json.return_value = {'object': arm_request.Object.__spec__['object']}
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
     mock_response.status_code = 200
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -465,11 +694,126 @@ def test_armrequest_request_group_by(arm_request, mock_response):
     )
 
 
+def test_armrequest_request_order_by(arm_request, mock_response):
+    test_order_by = ['field1', 'field2']
+
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request._order_by = test_order_by
+        arm_request._request('get')
+
+    expected_params = {'order_by[0]': 'field1', 'order_by[1]': 'field2'}
+
+    assert_mock_get_called_with_correct_values(
+        arm_request, mock_get, expected_params=expected_params
+    )
+
+
+def test_armrequest_request_order_by_single_field(arm_request, mock_response):
+    test_order_by = ['created_at']
+
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request._order_by = test_order_by
+        arm_request._request('get')
+
+    expected_params = {'order_by[0]': 'created_at'}
+
+    assert_mock_get_called_with_correct_values(
+        arm_request, mock_get, expected_params=expected_params
+    )
+
+
+def test_armrequest_request_limit(arm_request, mock_response):
+    test_limit = 10
+
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request._limit = test_limit
+        arm_request._request('get')
+
+    expected_params = {'limit': '10'}
+
+    assert_mock_get_called_with_correct_values(
+        arm_request, mock_get, expected_params=expected_params
+    )
+
+
+def test_armrequest_request_offset(arm_request, mock_response):
+    test_offset = 5
+
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request._offset = test_offset
+        arm_request._request('get')
+
+    expected_params = {'offset': '5'}
+
+    assert_mock_get_called_with_correct_values(
+        arm_request, mock_get, expected_params=expected_params
+    )
+
+
+def test_armrequest_request_limit_and_offset(arm_request, mock_response):
+    test_limit = 10
+    test_offset = 20
+
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request._limit = test_limit
+        arm_request._offset = test_offset
+        arm_request._request('get')
+
+    expected_params = {'limit': '10', 'offset': '20'}
+
+    assert_mock_get_called_with_correct_values(
+        arm_request, mock_get, expected_params=expected_params
+    )
+
+
+def test_armrequest_request_order_by_limit_offset(arm_request, mock_response):
+    test_order_by = ['created_at']
+    test_limit = 10
+    test_offset = 5
+
+    response_data = {'object': arm_request.Object.__spec__['object']}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request._order_by = test_order_by
+        arm_request._limit = test_limit
+        arm_request._offset = test_offset
+        arm_request._request('get')
+
+    expected_params = {'order_by[0]': 'created_at', 'limit': '10', 'offset': '5'}
+
+    assert_mock_get_called_with_correct_values(
+        arm_request, mock_get, expected_params=expected_params
+    )
+
+
 def test_armrequest_request_params(arm_request, mock_response):
     test_params = {'param1': 'value1'}
 
     with patch('requests.get') as mock_get:
-        mock_response.json.return_value = {'object': arm_request.Object.__spec__['object']}
+        response_data = {'object': arm_request.Object.__spec__['object']}
+        mock_response.text = json_serializer.dumps(response_data)
         mock_response.status_code = 200
         mock_get.return_value = mock_response
 
@@ -481,7 +825,7 @@ def test_armrequest_request_params(arm_request, mock_response):
 
 
 def test_armrequest_request_500_resp_json_not_dict(arm_request):
-    mock_response = Mock(status_code=500, json=lambda: [])
+    mock_response = Mock(status_code=500, text='[]')
 
     with patch('requests.get', return_value=mock_response) as mock_get:
         with pytest.raises(payload.UnknownResponse):
@@ -492,7 +836,7 @@ def test_armrequest_request_500_resp_json_not_dict(arm_request):
 
 def test_armrequest_request_500_no_resp_json_500(arm_request):
     mock_response = Mock(status_code=500)
-    mock_response.json.return_value = {'details': 'test'}
+    mock_response.text = json_serializer.dumps({'details': 'test'})
 
     with patch('requests.get', return_value=mock_response) as mock_get:
         with pytest.raises(payload.InternalServerError):
@@ -502,7 +846,7 @@ def test_armrequest_request_500_no_resp_json_500(arm_request):
 
 
 def test_armrequest_request_unknown_response(arm_request):
-    mock_response = Mock(status_code=999, json=lambda: None)
+    mock_response = Mock(status_code=999, text='null')
 
     with patch('requests.get', return_value=mock_response) as mock_get:
         with pytest.raises(payload.UnknownResponse):
@@ -517,7 +861,7 @@ def test_armrequest_request_200_list(arm_request, mock_response):
         'values': [{'id': 1, 'name': 'Test 1'}, {'id': 2, 'name': 'Test 2'}],
     }
 
-    mock_response.json.return_value = test_list_response
+    mock_response.text = json_serializer.dumps(test_list_response)
     mock_response.status_code = 200
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -533,7 +877,7 @@ def test_armrequest_request_200_list(arm_request, mock_response):
 def test_armrequest_request_200_single_obj(arm_request, mock_response):
     test_object_response = {'object': 'single', 'id': 1, 'name': 'Test 1'}
 
-    mock_response.json.return_value = test_object_response
+    mock_response.text = json_serializer.dumps(test_object_response)
     mock_response.status_code = 200
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -544,10 +888,116 @@ def test_armrequest_request_200_single_obj(arm_request, mock_response):
         assert result['name'] == 'Test 1'
 
 
+def test_armrequest_request_uses_dotdict_object_hook():
+    """Test that DotDict class provides dot notation access to dict keys"""
+    from payload.arm.request import DotDict
+
+    # Test DotDict functionality directly
+    test_dict = DotDict({'key1': 'value1', 'key2': 'value2', 'nested': {'inner': 'value'}})
+
+    # Test dot notation access
+    assert test_dict.key1 == 'value1'
+    assert test_dict.key2 == 'value2'
+
+    # Test that dict access still works
+    assert test_dict['key1'] == 'value1'
+    assert test_dict['key2'] == 'value2'
+
+    # Test nested dict (note: nested dicts need to be DotDict too for dot access)
+    nested_dotdict = DotDict(
+        {'outer': DotDict({'inner': DotDict({'deep': 'value'})})}
+    )
+    assert nested_dotdict.outer.inner.deep == 'value'
+    assert nested_dotdict['outer']['inner']['deep'] == 'value'
+
+    # Test setting attributes
+    test_dict.new_key = 'new_value'
+    assert test_dict.new_key == 'new_value'
+    assert test_dict['new_key'] == 'new_value'
+
+    # Test deleting attributes
+    del test_dict.new_key
+    assert 'new_key' not in test_dict
+
+
+def test_armrequest_request_dotdict_with_json_parsing():
+    """Test that DotDict works correctly when used as object_hook in JSON parsing"""
+    from payload.arm.request import DotDict
+
+    # Test basic dot notation access after JSON parsing
+    data = json_serializer.loads(
+        '{"key1": "value1", "key2": "value2"}', object_hook=DotDict
+    )
+    assert data.key1 == 'value1'
+    assert data.key2 == 'value2'
+
+    # Test nested objects - object_hook ensures all dicts become DotDict
+    nested_data = json_serializer.loads(
+        '{"outer": {"inner": {"deep": "value"}}}', object_hook=DotDict
+    )
+    assert nested_data.outer.inner.deep == 'value'
+
+    # Test that dict access still works
+    assert nested_data['outer']['inner']['deep'] == 'value'
+
+    # Test mixed access
+    assert nested_data.outer['inner'].deep == 'value'
+
+    # Test with lists containing objects (avoid 'items' key due to dict.items() method)
+    list_data = json_serializer.loads(
+        '{"records": [{"id": 1, "name": "first"}, {"id": 2, "name": "second"}]}',
+        object_hook=DotDict,
+    )
+    assert list_data.records[0].id == 1
+    assert list_data.records[0].name == 'first'
+    assert list_data.records[1].id == 2
+    assert list_data.records[1].name == 'second'
+
+    # Test that traditional dict methods still work
+    assert 'records' in list_data
+    assert len(list_data) == 1
+    assert list(list_data.keys()) == ['records']
+
+
+def test_armrequest_request_dotdict_with_list_response(arm_request, mock_response):
+    """Test that DotDict works correctly with list responses"""
+    test_list_response = {
+        'object': 'list',
+        'values': [
+            {'id': 1, 'name': 'Item 1', 'status': 'active'},
+            {'id': 2, 'name': 'Item 2', 'status': 'pending'},
+        ],
+    }
+
+    mock_response.text = json_serializer.dumps(test_list_response)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        result = arm_request._request('get')
+
+        # Verify list response structure
+        assert len(result) == 2
+
+        # Test that items in the list support dot notation
+        assert result[0].id == 1
+        assert result[0].name == 'Item 1'
+        assert result[0].status == 'active'
+
+        assert result[1].id == 2
+        assert result[1].name == 'Item 2'
+        assert result[1].status == 'pending'
+
+        # Traditional dict access should still work
+        assert result[0]['name'] == 'Item 1'
+        assert result[1]['name'] == 'Item 2'
+
+
 def test_armrequest_request_raise_non_500_errors(arm_request):
     with patch(
         'requests.get',
-        return_value=Mock(status_code=400, json=lambda: {'error_type': 'BadRequest'}),
+        return_value=Mock(
+            status_code=400, text=json_serializer.dumps({'error_type': 'BadRequest'})
+        ),
     ) as mock_get:
         with pytest.raises(payload.BadRequest):
             arm_request._request('get')
@@ -556,7 +1006,7 @@ def test_armrequest_request_raise_non_500_errors(arm_request):
 
 
 def test_armrequest_request_raise_bad_request(arm_request, mock_response):
-    mock_response.json.return_value = {}
+    mock_response.text = json_serializer.dumps({})
     mock_response.status_code = 400
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -569,7 +1019,10 @@ def test_armrequest_request_raise_bad_request(arm_request, mock_response):
 def test_armrequest_request_non_matching_error_and_http_code(arm_request):
     with patch(
         'requests.get',
-        return_value=Mock(status_code=400, json=lambda: {'error_type': 'InternalServerError'}),
+        return_value=Mock(
+            status_code=400,
+            text=json_serializer.dumps({'error_type': 'InternalServerError'}),
+        ),
     ) as mock_get:
         with pytest.raises(payload.BadRequest):
             arm_request._request('get')
@@ -580,7 +1033,9 @@ def test_armrequest_request_non_matching_error_and_http_code(arm_request):
 def test_armrequest_request_error_name_neq_data_error_type(arm_request):
     with patch(
         'requests.get',
-        return_value=Mock(status_code=500, json=lambda: {'error_type': 'BadRequest'}),
+        return_value=Mock(
+            status_code=500, text=json_serializer.dumps({'error_type': 'BadRequest'})
+        ),
     ) as mock_get:
         with pytest.raises(payload.InternalServerError):
             arm_request._request('get')
@@ -589,7 +1044,7 @@ def test_armrequest_request_error_name_neq_data_error_type(arm_request):
 
 
 def test_armrequest_request_500_raise_internal_server_error(arm_request, mock_response):
-    mock_response.json.return_value = {}
+    mock_response.text = json_serializer.dumps({})
     mock_response.status_code = 500
 
     with patch('requests.get', return_value=mock_response) as mock_get:
@@ -791,10 +1246,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.get.return_value = mock_response
 
         # Create session with api_version
@@ -819,10 +1275,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.get.return_value = mock_response
 
         # Create session without api_version
@@ -845,10 +1302,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.get.return_value = mock_response
 
         # Create request without session (will use global payload module)
@@ -868,10 +1326,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.post.return_value = mock_response
 
         # Create session with api_version
@@ -896,10 +1355,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.put.return_value = mock_response
 
         # Create session with api_version
@@ -924,10 +1384,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.delete.return_value = mock_response
 
         # Create session with api_version
@@ -956,10 +1417,11 @@ class TestARMRequestApiVersion:
         # Setup mock response
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
+        response_data = {
             'object': 'mock_object',
             'id': 'mock_123',
         }
+        mock_response.text = json_serializer.dumps(response_data)
         mock_requests.get.return_value = mock_response
 
         # Create session with api_version

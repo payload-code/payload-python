@@ -103,6 +103,10 @@ class Webhook(ARMObject):
     __spec__ = {"object": "webhook"}
 
 
+class WebhookLog(ARMObject):
+    __spec__ = {"object": "webhook_log"}
+
+
 class PaymentLink(ARMObject):
     __spec__ = {"object": "payment_link"}
 
@@ -124,6 +128,10 @@ class Intent(ARMObject):
     __spec__ = {"object": "intent"}
 
 
+class InvoiceAttachment(ARMObject):
+    __spec__ = {"object": "invoice_attachment"}
+
+
 class InvoiceItem(ARMObject):
     __spec__ = {"object": "invoice_item"}
 
@@ -133,7 +141,7 @@ class PaymentAllocation(ARMObject):
 
 
 class Entity(ARMObject):
-    __spec__ = {"object": "entity"}
+    __spec__ = {"endpoint": "/entities", "object": "entity"}
 
 
 class Stakeholder(ARMObject):
@@ -165,4 +173,4 @@ class ProcessingRule(ARMObject):
 
 
 class ProcessingSettings(ARMObject):
-    __spec__ = {"object": "processing_settings"}
+    __spec__ = {"endpoint": "/processing_settings", "object": "processing_settings"}

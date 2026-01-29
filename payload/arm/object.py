@@ -1,13 +1,16 @@
-from .attr import MetaAttr
-from functools import partial
-from six import with_metaclass
 import json
+from functools import partial
+
+from six import with_metaclass
+
+from .attr import MetaAttr
 
 _object_cache = {}
 
+
 class ARMMetaObject(MetaAttr):
     def __new__(cls, name, bases, dct):
-        if len(bases) and hasattr( bases[0], '__spec__' ):
+        if len(bases) and hasattr(bases[0], '__spec__'):
             dct['__spec__'] = dict(bases[0].__spec__, **dct['__spec__'])
 
         self = super(ARMMetaObject, cls).__new__(cls, name, bases, dct)
@@ -18,6 +21,7 @@ class ARMMetaObject(MetaAttr):
                 self.__spec__['endpoint'] = '/{}s'.format(self.__spec__['object'])
 
         return self
+
 
 class ARMObject(with_metaclass(ARMMetaObject)):
     __spec__ = {}
@@ -38,7 +42,7 @@ class ARMObject(with_metaclass(ARMMetaObject)):
 
     def __getattr__(self, attr):
         if attr in self.field_map:
-            return self._data.get(self._data.get('type'),{}).get(attr)
+            return self._data.get(self._data.get('type'), {}).get(attr)
         return self._data.get(attr)
 
     def _set_data(self, obj):
@@ -48,7 +52,7 @@ class ARMObject(with_metaclass(ARMMetaObject)):
             _object_cache[self.__class__][obj['id']] = self
 
     def json(self):
-        return json.dumps( self.data(), indent=4, sort_keys=True )
+        return json.dumps(self.data(), indent=4, sort_keys=True)
 
     def data(self):
         return object2data(self._data)
@@ -65,41 +69,54 @@ class ARMObject(with_metaclass(ARMMetaObject)):
 
     @classmethod
     def filter_by(cls, *filters, **kw_filters):
-        return ARMRequest(cls, kw_filters.pop('_session', None))\
-            .filter_by(*filters, **dict(cls.__spec__.get('polymorphic') or {}, **kw_filters))
+        return ARMRequest(cls, kw_filters.pop('_session', None)).filter_by(
+            *filters, **dict(cls.__spec__.get('polymorphic') or {}, **kw_filters)
+        )
 
     @classmethod
     def create(cls, objects=None, **values):
-        return ARMRequest(cls, values.pop('_session', None))\
-            .create(objects, **values)
+        return ARMRequest(cls, values.pop('_session', None)).create(objects, **values)
 
     @classmethod
     def select(cls, *fields, _session=None):
-        return ARMRequest(cls, _session).select(*fields)\
+        return (
+            ARMRequest(cls, _session)
+            .select(*fields)
             .filter_by(**dict(cls.__spec__.get('polymorphic') or {}))
+        )
 
     @classmethod
     def update_all(cls, objects=None, **values):
-        return ARMRequest(cls, values.pop('_session', None))\
-            .update(objects, **values)
+        return ARMRequest(cls, values.pop('_session', None)).update(objects, **values)
 
     @classmethod
     def delete_all(cls, objects=None, **values):
-        return ARMRequest(cls, values.pop('_session', None))\
-            .delete(objects, **values)
+        return ARMRequest(cls, values.pop('_session', None)).delete(objects, **values)
 
-class ARMMetaObjectWrapper(object):
-    def __getattr__(cls, key):
-        if key == 'Foo':
-            return cls._foo_func()
-        elif key == 'Bar':
-            return cls._bar_func()
-        raise AttributeError(key)
+    @classmethod
+    def order_by(cls, *values, **kwargs):
+        return ARMRequest(cls, kwargs.pop('_session', None)).order_by(*values)
+
+    @classmethod
+    def limit(cls, limit, _session=None):
+        return ARMRequest(cls, _session).limit(limit)
+
+    @classmethod
+    def offset(cls, offset, _session=None):
+        return ARMRequest(cls, _session).offset(offset)
+
+    @classmethod
+    def all(cls, _session=None):
+        return ARMRequest(cls, _session).all()
+
 
 class ARMObjectWrapper(object):
     def __init__(self, Object, session):
         self.Object = Object
         self.session = session
+
+    def __iter__(self):
+        yield '*'
 
     def __call__(self, *args, **kwargs):
         obj = self.Object(*args, **kwargs)
@@ -111,11 +128,22 @@ class ARMObjectWrapper(object):
         return getattr(self.Object, __name)(*args, **kwargs)
 
     def __getattr__(self, name):
-        if name in ('get', 'filter_by', 'create', 'select', 'update_all', 'delete_all'):
+        if name in (
+            'get',
+            'filter_by',
+            'create',
+            'select',
+            'update_all',
+            'delete_all',
+            'order_by',
+            'limit',
+            'offset',
+            'all'
+        ):
             return partial(self.call, name)
 
         return getattr(self.Object, name)
 
 
+from ..utils import data2object, object2data
 from .request import ARMRequest
-from ..utils import object2data, data2object

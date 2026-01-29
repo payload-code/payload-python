@@ -67,10 +67,12 @@ __all__ = [
     'Transaction',
     'User',
     'Webhook',
+    'WebhookLog',
     # New API v2 Objects
     'Profile',
     'BillingItem',
     'Intent',
+    'InvoiceAttachment',
     'InvoiceItem',
     'PaymentAllocation',
     'Entity',
@@ -100,7 +102,7 @@ from .exceptions import (
     Unauthorized,
     UnknownResponse,
 )
-from .objects import (  # API v2 Objects
+from .objects import (
     AccessToken,
     Account,
     BankAccount,
@@ -118,6 +120,7 @@ from .objects import (  # API v2 Objects
     Entity,
     Intent,
     Invoice,
+    InvoiceAttachment,
     InvoiceItem,
     Ledger,
     LineItem,
@@ -141,6 +144,7 @@ from .objects import (  # API v2 Objects
     Transfer,
     User,
     Webhook,
+    WebhookLog,
 )
 from .version import __version__
 
