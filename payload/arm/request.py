@@ -36,9 +36,9 @@ class ARMRequest(object):
     def __getitem__(self, key):
         if isinstance(key, slice):
             if key.start and key.start < 0:
-                raise ValueError("Negative slice indices not supported")
+                raise ValueError('Negative slice indices not supported')
             if key.stop and key.stop < 0:
-                raise ValueError("Negative slice indices not supported")
+                raise ValueError('Negative slice indices not supported')
 
             if key.start:
                 self.offset(key.start)

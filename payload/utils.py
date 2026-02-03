@@ -1,5 +1,5 @@
-from .arm.object import ARMObject, _object_cache
 from .arm.attr import Attr
+from .arm.object import ARMObject, _object_cache
 
 
 def get_object_cls(item):

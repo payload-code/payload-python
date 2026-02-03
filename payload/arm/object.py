@@ -18,7 +18,11 @@ class ARMMetaObject(MetaAttr):
         if len(bases):
             _object_cache[self] = {}
             if 'endpoint' not in self.__spec__:
-                self.__spec__['endpoint'] = '/{}s'.format(self.__spec__['object'])
+                self.__spec__['endpoint'] = '/' + (
+                    '{}s'.format(self.__spec__['object'])
+                    if not self.__spec__['object'].endswith('s')
+                    else self.__spec__['object']
+                )
 
         return self
 
@@ -138,7 +142,7 @@ class ARMObjectWrapper(object):
             'order_by',
             'limit',
             'offset',
-            'all'
+            'all',
         ):
             return partial(self.call, name)
 
