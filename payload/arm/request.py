@@ -1,4 +1,5 @@
 import copy
+import json as json_serializer
 import sys
 
 import requests
@@ -15,6 +16,12 @@ else:
     from urlparse import urljoin
 
 
+class DotDict(dict):
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+
 class ARMRequest(object):
     def __init__(self, Object=None, session=None):
         self.Object = Object
@@ -22,6 +29,30 @@ class ARMRequest(object):
         self._filters = []
         self._attrs = []
         self._group_by = []
+        self._order_by = []
+        self._limit = None
+        self._offset = None
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            if key.start and key.start < 0:
+                raise ValueError('Negative slice indices not supported')
+            if key.stop and key.stop < 0:
+                raise ValueError('Negative slice indices not supported')
+
+            if key.start:
+                self.offset(key.start)
+
+            if key.stop:
+                self.limit(key.stop - (key.start or 0))
+
+            return self.all()
+        else:
+            raise TypeError(f'invalid key or index: {key}')
+
+    def __iter__(self):
+        for result in self.all():
+            yield result
 
     def _request(self, method, id=None, headers=None, params=None, json=None):
         session = self.session or payload
@@ -54,6 +85,15 @@ class ARMRequest(object):
         if self._group_by:
             params['group_by'] = list(map(str, self._group_by))
 
+        if self._order_by:
+            params['order_by'] = list(map(str, self._order_by))
+
+        if self._limit:
+            params['limit'] = str(self._limit)
+
+        if self._offset:
+            params['offset'] = str(self._offset)
+
         convert_fieldmap(params, self.Object.field_map)
         if json:
             convert_fieldmap(json, self.Object.field_map)
@@ -77,7 +117,7 @@ class ARMRequest(object):
                 json=json,
             )
         try:
-            data = response.json()
+            data = json_serializer.loads(response.text, object_hook=DotDict)
 
             if not isinstance(data, dict):
                 raise payload.UnknownResponse()
@@ -123,6 +163,18 @@ class ARMRequest(object):
 
     def group_by(self, *fields):
         self._group_by.extend(fields)
+        return self
+
+    def order_by(self, *fields):
+        self._order_by.extend(fields)
+        return self
+
+    def limit(self, limit):
+        self._limit = limit
+        return self
+
+    def offset(self, offset):
+        self._offset = offset
         return self
 
     def create(self, obj=None, **values):
