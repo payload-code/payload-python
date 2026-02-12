@@ -1233,6 +1233,101 @@ def test_data2object(item, field_map, session, expected):
     assert result == expected
 
 
+class MockObjectWithDefaults(ARMObject):
+    __spec__ = {'object': 'test_default'}
+    default_params = {'limit': '100', 'mode': 'live'}
+
+
+class MockObjectWithNestedDefaults(ARMObject):
+    __spec__ = {'object': 'test_nested_default'}
+    default_params = {'meta': {'limit': 10}, 'mode': 'live'}
+
+
+def test_default_params_applied(mock_session, mock_response):
+    response_data = {'object': 'test_default'}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request = ARMRequest(Object=MockObjectWithDefaults, session=mock_session)
+        arm_request._request('get')
+
+    call_kwargs = mock_get.call_args[1]
+    assert call_kwargs['params']['limit'] == '100'
+    assert call_kwargs['params']['mode'] == 'live'
+
+
+def test_default_params_not_override_explicit_params(mock_session, mock_response):
+    response_data = {'object': 'test_default'}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request = ARMRequest(Object=MockObjectWithDefaults, session=mock_session)
+        arm_request._request('get', params={'limit': '50'})
+
+    call_kwargs = mock_get.call_args[1]
+    assert call_kwargs['params']['limit'] == '50'
+    assert call_kwargs['params']['mode'] == 'live'
+
+
+def test_default_params_not_override_limit(mock_session, mock_response):
+    response_data = {'object': 'test_default'}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request = ARMRequest(Object=MockObjectWithDefaults, session=mock_session)
+        arm_request._limit = 25
+        arm_request._request('get')
+
+    call_kwargs = mock_get.call_args[1]
+    assert call_kwargs['params']['limit'] == '25'
+    assert call_kwargs['params']['mode'] == 'live'
+
+
+def test_default_params_not_override_filters(mock_session, mock_response):
+    response_data = {'object': 'test_default'}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request = ARMRequest(Object=MockObjectWithDefaults, session=mock_session)
+        arm_request._filters = [Attr.mode == 'test']
+        arm_request._request('get')
+
+    call_kwargs = mock_get.call_args[1]
+    assert call_kwargs['params']['mode'] == 'test'
+    assert call_kwargs['params']['limit'] == '100'
+
+
+def test_default_params_nested(mock_session, mock_response):
+    response_data = {'object': 'test_nested_default'}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request = ARMRequest(Object=MockObjectWithNestedDefaults, session=mock_session)
+        arm_request._request('get')
+
+    call_kwargs = mock_get.call_args[1]
+    assert call_kwargs['params']['meta[limit]'] == 10
+    assert call_kwargs['params']['mode'] == 'live'
+
+
+def test_default_params_none(mock_session, mock_response):
+    response_data = {'object': 'test'}
+    mock_response.text = json_serializer.dumps(response_data)
+    mock_response.status_code = 200
+
+    with patch('requests.get', return_value=mock_response) as mock_get:
+        arm_request = ARMRequest(Object=MockArmObject, session=mock_session)
+        arm_request._request('get')
+
+    call_kwargs = mock_get.call_args[1]
+    assert call_kwargs['params'] == {}
+
+
 class MockObject(ARMObject):
     __spec__ = {'object': 'mock_object', 'endpoint': '/mock'}
 

@@ -31,6 +31,7 @@ class ARMObject(with_metaclass(ARMMetaObject)):
     __spec__ = {}
     _session = None
     field_map = set()
+    default_params = None
 
     def __new__(cls, _session=None, **obj):
         if 'id' in obj:

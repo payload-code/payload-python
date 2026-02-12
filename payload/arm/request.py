@@ -94,6 +94,12 @@ class ARMRequest(object):
         if self._offset:
             params['offset'] = str(self._offset)
 
+        if self.Object.default_params:
+            default = nested_qstring_keys(dict(self.Object.default_params))
+            for k, v in default.items():
+                if k not in params:
+                    params[k] = v
+
         convert_fieldmap(params, self.Object.field_map)
         if json:
             convert_fieldmap(json, self.Object.field_map)
