@@ -1,6 +1,9 @@
+import json
 from unittest.mock import Mock
 
 import pytest
+
+import payload
 
 from payload.arm.object import ARMObject, ARMObjectWrapper
 
@@ -35,3 +38,35 @@ class TestARMObjectWrapperIter:
         (item,) = wrapper
 
         assert item == '*'
+
+
+@pytest.mark.parametrize('serialize', ['data', 'json'])
+def test_serializing_payment_preserves_nested_models(serialize):
+    card = payload.Card(expiry='12/28')
+    payment = payload.Payment(amount=100, payment_method=card)
+    expected = {
+        'type': 'payment',
+        'amount': 100,
+        'payment_method': {'type': 'card', 'card': {'expiry': '12/28'}},
+    }
+
+    serialized = getattr(payment, serialize)()
+    assert (json.loads(serialized) if serialize == 'json' else serialized) == expected
+    assert payment.payment_method is card
+    assert payment.payment_method.expiry == '12/28'
+    assert payment.data() == expected
+
+
+@pytest.mark.parametrize('serialize', ['data', 'json'])
+def test_serializing_invoice_preserves_item_models(serialize):
+    charge = payload.ChargeItem(amount=29.99)
+    invoice = payload.Invoice(items=[charge])
+    items = invoice.items
+    expected = {'items': [{'entry_type': 'charge', 'amount': 29.99}]}
+
+    serialized = getattr(invoice, serialize)()
+    assert (json.loads(serialized) if serialize == 'json' else serialized) == expected
+    assert invoice.items is items
+    assert invoice.items[0] is charge
+    assert invoice.items[0].amount == 29.99
+    assert invoice.data() == expected

@@ -80,13 +80,19 @@ def convert_fieldmap(obj, field_map):
             obj[obj['type']][f] = obj.pop(f)
 
 
+# Serialization helpers.
 def object2data(item):
+    """Serialize without replacing nested models in the caller's live object graph."""
+
     def recurse(item):
         if isinstance(item, (list, tuple)):
+            if isinstance(item, list):
+                item = item[:]
             _iter = enumerate(item)
         else:
             if isinstance(item, ARMObject):
                 item = item.data()
+            item = item.copy()
             _iter = list(item.items())
         for key, val in _iter:
             if isinstance(val, ARMObject):
@@ -96,3 +102,6 @@ def object2data(item):
         return item
 
     return recurse(item)
+
+
+# End serialization helpers.
