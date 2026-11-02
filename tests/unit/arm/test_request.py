@@ -1441,3 +1441,41 @@ class TestARMRequestApiVersion:
         assert 'X-Custom-Header' in call_kwargs['headers']
         assert call_kwargs['headers']['X-API-Version'] == 'v2.6'
         assert call_kwargs['headers']['X-Custom-Header'] == 'custom_value'
+
+
+@pytest.mark.parametrize('serialize', ['data', 'json'])
+def test_serializing_response_preserves_nested_model_session(serialize):
+    session = payload.Session(api_key='offline-fixture', api_url='https://fixture.invalid/')
+    response_data = {
+        'object': 'transaction',
+        'type': 'payment',
+        'id': 'serialization_payment_' + serialize,
+        'payment_method': {
+            'object': 'payment_method',
+            'type': 'card',
+            'id': 'serialization_card_' + serialize,
+            'card': {'expiry': '12/28'},
+        },
+    }
+    response = Mock(status_code=200, text=json_serializer.dumps(response_data))
+    with patch('requests.get', return_value=response) as mock_get:
+        payment = session.Payment.get(response_data['id'])
+
+    card = payment.payment_method
+    assert isinstance(card, payload.Card)
+    assert card._session is session
+    serialized = getattr(payment, serialize)()
+    assert (
+        json_serializer.loads(serialized) if serialize == 'json' else serialized
+    ) == response_data
+    assert payment.payment_method is card
+    assert card.expiry == '12/28'
+    assert card._session is session
+    assert payment._session is session
+    mock_get.assert_called_once_with(
+        'https://fixture.invalid/transactions/' + response_data['id'],
+        headers={},
+        params={},
+        auth=('offline-fixture', ''),
+        json=None,
+    )
