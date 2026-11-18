@@ -88,6 +88,29 @@ payment = pl.Payment.create(
 )
 ```
 
+### Retrying Creates Safely
+
+Pass an `idempotency_key` to `pl.create` to retry a create without duplicating the object.
+See the [Idempotency documentation](https://docs.payload.com/v2/api-reference/idempotency-key)
+for key rules and responses.
+
+```python
+import payload
+pl = payload.Session('secret_key_3bW9JMZtPVDOfFNzwRdfE')
+
+payment = pl.create(
+    pl.Payment(
+        amount=100.0,
+        payment_method=pl.Card(
+            card_number='4242 4242 4242 4242',
+            expiry='12/28',
+            card_code='123'
+        )
+    ),
+    idempotency_key='order-1234'
+)
+```
+
 ### Accessing Object Attributes
 
 Object attributes are accessible through dot notation.

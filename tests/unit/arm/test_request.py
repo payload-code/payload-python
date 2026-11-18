@@ -151,7 +151,9 @@ def test_armrequest_create(mock_request, test_case, arm_request):
         assert str(exc_info.value) == test_case['expected_exception_message']
     else:
         arm_request.create(obj=test_case['obj'])
-        mock_request.assert_called_once_with('post', json=test_case['expected_json'])
+        mock_request.assert_called_once_with(
+            'post', json=test_case['expected_json'], headers=None
+        )
 
 
 @pytest.mark.parametrize(
@@ -1441,3 +1443,69 @@ class TestARMRequestApiVersion:
         assert 'X-Custom-Header' in call_kwargs['headers']
         assert call_kwargs['headers']['X-API-Version'] == 'v2.6'
         assert call_kwargs['headers']['X-Custom-Header'] == 'custom_value'
+
+
+class TestIdempotencyKey:
+    @pytest.fixture
+    def mock_requests(self):
+        with patch('payload.arm.request.requests') as mock_requests:
+            mock_requests.post.return_value = Mock(
+                status_code=200,
+                text=json_serializer.dumps({'object': 'mock_object', 'id': 'mock_123'}),
+            )
+            yield mock_requests
+
+    @pytest.fixture
+    def session(self):
+        return Session(api_key='test_key', api_url='https://api.test.com')
+
+    def test_session_create_sends_header_and_leaves_body_unchanged(
+        self, mock_requests, session
+    ):
+        session.create(MockObject(name='Jane'), idempotency_key='order-1234')
+
+        call_kwargs = mock_requests.post.call_args[1]
+        assert call_kwargs['headers'] == {'Idempotency-Key': 'order-1234'}
+        assert call_kwargs['json'] == {'name': 'Jane'}
+
+    def test_session_create_without_key_sends_no_header(self, mock_requests, session):
+        session.create(MockObject(name='Jane'))
+
+        assert mock_requests.post.call_args[1]['headers'] == {}
+
+    def test_session_create_with_api_version_sends_both_headers(self, mock_requests):
+        session = Session(api_key='test_key', api_url='https://api.test.com', api_version='v2')
+
+        session.create(MockObject(name='Jane'), idempotency_key='order-1234')
+
+        assert mock_requests.post.call_args[1]['headers'] == {
+            'X-API-Version': 'v2',
+            'Idempotency-Key': 'order-1234',
+        }
+
+    def test_module_create_sends_header(self, mock_requests):
+        payload.create(MockObject(name='Jane'), idempotency_key='order-1234')
+
+        assert mock_requests.post.call_args[1]['headers'] == {
+            'Idempotency-Key': 'order-1234'
+        }
+
+    @pytest.mark.parametrize(
+        'error_type, status_code, expected_error',
+        [
+            ('IdempotencyInProgress', 409, payload.IdempotencyInProgress),
+            ('IdempotencyUnreplayable', 409, payload.IdempotencyUnreplayable),
+            ('IdempotencyKeyReused', 400, payload.IdempotencyKeyReused),
+            ('ServiceUnavailable', 503, payload.ServiceUnavailable),
+        ],
+    )
+    def test_error_response_raises_matching_exception(
+        self, mock_requests, session, error_type, status_code, expected_error
+    ):
+        mock_requests.post.return_value = Mock(
+            status_code=status_code,
+            text=json_serializer.dumps({'error_type': error_type}),
+        )
+
+        with pytest.raises(expected_error):
+            session.create(MockObject(name='Jane'), idempotency_key='order-1234')

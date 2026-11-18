@@ -30,6 +30,9 @@ __all__ = [
     # Exceptions
     'BadRequest',
     'Forbidden',
+    'IdempotencyInProgress',
+    'IdempotencyKeyReused',
+    'IdempotencyUnreplayable',
     'InternalServerError',
     'InvalidAttributes',
     'NotFound',
@@ -92,6 +95,9 @@ from .arm import session_factory
 from .exceptions import (
     BadRequest,
     Forbidden,
+    IdempotencyInProgress,
+    IdempotencyKeyReused,
+    IdempotencyUnreplayable,
     InternalServerError,
     InvalidAttributes,
     NotFound,
@@ -157,8 +163,9 @@ api_version = None
 Session = session_factory('PayloadSession', objects)
 
 
-def create(*args, **kwargs):
-    return ARMRequest().create(*args, **kwargs)
+def create(*args, idempotency_key=None, **kwargs):
+    headers = {'Idempotency-Key': idempotency_key} if idempotency_key else None
+    return ARMRequest().create(*args, _headers=headers, **kwargs)
 
 
 def update(*args, **kwargs):

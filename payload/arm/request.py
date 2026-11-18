@@ -177,8 +177,10 @@ class ARMRequest(object):
         self._offset = offset
         return self
 
-    def create(self, obj=None, **values):
+    def create(self, obj=None, _headers=None, **values):
         obj = obj or values
+        if isinstance(obj, ARMObject) and not self.Object:
+            self.Object = obj.__class__
         if isinstance(obj, list):
             for o in obj:
                 if not self.Object and not isinstance(o, ARMObject):
@@ -194,7 +196,7 @@ class ARMRequest(object):
             obj.update(self.Object.__spec__.get('polymorphic', {}))
 
         obj = object2data(obj)
-        return self._request('post', json=obj)
+        return self._request('post', json=obj, headers=_headers)
 
     def delete(self, objects=None):
         if isinstance(objects, list):

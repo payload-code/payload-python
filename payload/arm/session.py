@@ -20,8 +20,9 @@ class Session(object):
         self.api_url = api_url or payload.api_url
         self.api_version = api_version or payload.api_version
 
-    def create(self, *args, **kwargs):
-        return ARMRequest(session=self).create(*args, **kwargs)
+    def create(self, *args, idempotency_key=None, **kwargs):
+        headers = {'Idempotency-Key': idempotency_key} if idempotency_key else None
+        return ARMRequest(session=self).create(*args, _headers=headers, **kwargs)
 
     def update(self, *args, **kwargs):
         return ARMRequest(session=self).update(*args, **kwargs)

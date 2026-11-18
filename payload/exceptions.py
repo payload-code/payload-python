@@ -29,6 +29,9 @@ class TransactionDeclined(BadRequest):
         super().__init__(*args, **kwargs)
         self.transaction = self.details = map_object(self.response['details'])
 
+class IdempotencyKeyReused(BadRequest):
+    pass
+
 class InvalidAttributes(BadRequest):
     pass
 
@@ -40,6 +43,12 @@ class Forbidden(PayloadError):
 
 class NotFound(PayloadError):
     http_code = 404
+
+class IdempotencyInProgress(PayloadError):
+    http_code = 409
+
+class IdempotencyUnreplayable(PayloadError):
+    http_code = 409
 
 class TooManyRequests(PayloadError):
     http_code = 429
